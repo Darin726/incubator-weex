@@ -383,7 +383,6 @@ std::string VNodeRenderManager::CreatePageWithContent(const uint8_t *contents, s
     context->page_id(page_id);
     qking_executor_t executor = qking_create_executor(context);
     executors_.insert({page_id, executor});
-    CallBackManager::AddCallBackManager(page_id);
     qking_api_register_weex_environment();
     std::string err;
     if (!qking_api_set_assembly_code(executor, (uint8_t *)contents, length, err)) {

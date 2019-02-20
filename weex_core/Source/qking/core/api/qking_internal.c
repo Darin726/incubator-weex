@@ -2071,7 +2071,11 @@ qking_call_function (const qking_value_t func_obj_val, /**< function object to c
 
   if (qking_value_is_function (func_obj_val))
   {
-    return qking_invoke_function (false, func_obj_val, this_val, args_p, args_count);
+    /* avoid gc release function when invoke */
+    qking_acquire_value(func_obj_val);
+    qking_value_t result = qking_invoke_function (false, func_obj_val, this_val, args_p, args_count);
+    qking_release_value(func_obj_val);
+    return result;
   }
 
   return qking_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
