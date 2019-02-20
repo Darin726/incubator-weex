@@ -1573,6 +1573,9 @@ ecma_register_t *ecma_op_function_find_in_closure_register(vm_frame_ctx_t *frame
     vm_frame_ctx_t *frame_ctx_current_p = frame_ctx_p;
     vm_frame_ctx_t *closure_ctx_p = NULL;
     do {
+        if (!frame_ctx_current_p) {
+            break;
+        }
         ecma_value_t this_function = frame_ctx_current_p->this_function;
         if (!ecma_op_is_callable(this_function)) {
             break;

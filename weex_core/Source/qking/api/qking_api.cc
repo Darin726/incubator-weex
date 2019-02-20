@@ -111,11 +111,13 @@ static void qking_handler_fatal_error(int code) {
 #endif
 
 static void qking_handler_print_debugger_fatal_error(int code) {
-  std::string error = "\n[exception][pc]:=>";
   struct qking_context_t *context_p = qking_port_get_current_context();
   qking_vm_exec_state_t *executor_p =
       (qking_vm_exec_state_t *)context_p->executor_p;
   vm_frame_ctx_t *frame_ctx_p = context_p->vm_top_context_p;
+  if (!frame_ctx_p) {
+    return;
+  }
   while (frame_ctx_p) {
     const ecma_compiled_code_t *bytecode_header_p =
         frame_ctx_p->bytecode_header_p;
@@ -127,6 +129,7 @@ static void qking_handler_print_debugger_fatal_error(int code) {
     }
     break;
   }
+  std::string error = "\n[exception][pc]:=>";
   if (executor_p->symbols_pp && executor_p->symbols_size > 0 &&
       frame_ctx_p->pc_current_idx < executor_p->symbols_size) {
     error += executor_p->symbols_pp[frame_ctx_p->pc_current_idx];
