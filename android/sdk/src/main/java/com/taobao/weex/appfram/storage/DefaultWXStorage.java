@@ -166,7 +166,7 @@ public class DefaultWXStorage implements IWXStorageAdapter {
             return false;
         }
 
-        WXLogUtils.d(WXSQLiteOpenHelper.TAG_STORAGE, "set k-v to storage(key:" + key + ",value:" + value + ",isPersistent:" + isPersistent + ",allowRetry:" + allowRetryWhenFull + ")");
+        //WXLogUtils.d(WXSQLiteOpenHelper.TAG_STORAGE, "set k-v to storage(key:" + key + ",value:" + value + ",isPersistent:" + isPersistent + ",allowRetry:" + allowRetryWhenFull + ")");
         String sql = "INSERT OR REPLACE INTO " + WXSQLiteOpenHelper.TABLE_STORAGE + " VALUES (?,?,?,?);";
         SQLiteStatement statement = null;
         String timeStamp = WXSQLiteOpenHelper.sDateFormatter.format(new Date());

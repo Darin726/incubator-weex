@@ -81,6 +81,8 @@ public:
     }
 
     weex::base::TimeCalculator *timeCalculator;
+
+    bool is_from_instance = true;
 private:
     Future* future_;
     WeexGlobalObject* global_object_;

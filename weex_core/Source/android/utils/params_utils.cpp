@@ -123,6 +123,9 @@ void addParamsToIPCSerializer(IPCSerializer *serializer, VALUE_WITH_TYPE* param)
 bool g_is_single_process = false;
 bool isSingleProcess() { return g_is_single_process; }
 
+bool g_use_runtime_api = false;
+bool isUseRunTimeApi(){ return  g_use_runtime_api;}
+
 std::vector<INIT_FRAMEWORK_PARAMS*> initFromParam(
     JNIEnv* env, jobject params,
     const std::function<void(const char*, const char*)>&
@@ -200,6 +203,22 @@ std::vector<INIT_FRAMEWORK_PARAMS*> initFromParam(
     } else {
       g_is_single_process = strstr(use_single_process, "true") != nullptr;
       env->DeleteLocalRef(j_use_single_process);
+    }
+  }
+
+  jmethodID m_use_runtime_api =  env->GetMethodID(c_params, "getUseRunTimeApi", "()Ljava/lang/String;");
+  if (m_use_runtime_api == nullptr) {
+    LOGE("m_use_runtime_api method is missing");
+  } else {
+    jobject j_use_runtime_api =
+            env->CallObjectMethod(params, m_use_runtime_api);
+    const char* use_runtime_api_str =
+            env->GetStringUTFChars((jstring)(j_use_runtime_api), nullptr);
+    if (nullptr == use_runtime_api_str){
+      g_use_runtime_api = false;
+    } else{
+      g_use_runtime_api = strstr(use_runtime_api_str, "true") != nullptr;
+      env->DeleteLocalRef(j_use_runtime_api);
     }
   }
 

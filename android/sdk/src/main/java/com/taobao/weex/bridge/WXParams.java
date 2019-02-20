@@ -40,6 +40,7 @@ public class WXParams implements Serializable {
   private String needInitV8;
   private String cacheDir;
   private String useSingleProcess;
+  private String useRunTimeApi;
   private String crashFilePath;
   private String libJssPath;
   private String layoutDirection;
@@ -177,6 +178,16 @@ public class WXParams implements Serializable {
     this.useSingleProcess = useSingleProcess;
   }
 
+  public void setUseRunTimeApi(boolean newApi){
+    this.useRunTimeApi = newApi?"true":"false";
+  }
+
+  @CalledByNative
+  public String getUseRunTimeApi() {
+    WXLogUtils.e(" is use runtime api " + useRunTimeApi);
+    return useRunTimeApi;
+  }
+
   public void setLogLevel(String logLevel) {
     this.logLevel = logLevel;
   }
@@ -266,6 +277,7 @@ public class WXParams implements Serializable {
     map.put("libIcuPath", libIcuPath);
     map.put("libLdPath", libLdPath);
     map.put("options", options);
+    map.put("useRunTimeApi", useRunTimeApi);
     return map;
   }
 }

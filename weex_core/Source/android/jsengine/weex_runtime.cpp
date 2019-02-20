@@ -725,9 +725,8 @@ int WeexRuntime::createInstance(const String &instanceId, const String &func, co
                 JSObjectSetProperty(instanceContextRef, instanceGlobalObject, propertyName_, propertyValue_, 0, NULL);
             }
 
-
-
-            JSValueRef vueRef = JSObjectGetProperty(globalContextRef, ref, JSStringCreateWithUTF8CString("Vue"), nullptr);
+            auto vueString = JSStringCreateWithUTF8CString("Vue");
+            JSValueRef vueRef = JSObjectGetProperty(globalContextRef, ref, vueString, nullptr);
             if (vueRef != nullptr) {
                 JSObjectRef vueObject = JSValueToObject(globalContextRef, vueRef, nullptr);
                 if (vueObject != nullptr) {
@@ -737,6 +736,7 @@ int WeexRuntime::createInstance(const String &instanceId, const String &func, co
                                                               JSContextGetGlobalObject(instanceContextRef)));
                 }
             }
+            JSStringRelease(vueString);
             //-------------------------------------------------
 
 //            temp_object->resetPrototype(vm, ret);
@@ -923,6 +923,10 @@ void WeexRuntime::removeTimerFunction(const uint32_t timerFunction, JSGlobalObje
         return;
 
     go->removeTimer(timerFunction);
+}
+
+WeexRuntime::WeexRuntime() {
+
 }
 
 bool WeexRuntime::hasInstanceId(String &id) {

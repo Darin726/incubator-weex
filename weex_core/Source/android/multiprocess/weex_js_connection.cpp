@@ -42,9 +42,11 @@
 #include "third_party/IPC/IPCException.h"
 #include "third_party/IPC/IPCSender.h"
 #include "third_party/IPC/IPCListener.h"
+#include "android/utils/params_utils.h"
 
 static bool s_in_find_icu = false;
 static std::string g_crashFileName;
+static bool g_use_runtime_api = false;
 static void doExec(int fdClient, int fdServer, bool traceEnable, bool startupPie);
 
 static int copyFile(const char *SourceFile, const char *NewFile);
@@ -134,6 +136,7 @@ WeexJSConnection::WeexJSConnection()
     g_crashFileName += "nullfilename";
   }
   LOGE("WeexJSConnection g_crashFileName: %s\n", g_crashFileName.c_str());
+  g_use_runtime_api = isUseRunTimeApi();
 }
 
 
@@ -518,7 +521,7 @@ void doExec(int fdClient, int fdServer, bool traceEnable, bool startupPie) {
       mcfile << "jsengine WeexJSConnection::doExec start path on sdcard, start execve so name:"
              << executableName << std::endl;
 #endif
-      const char *argv[] = {executableName.c_str(), fdStr, fdServerStr, traceEnable ? "1" : "0", g_crashFileName.c_str(), nullptr};
+      const char *argv[] = {executableName.c_str(), fdStr, fdServerStr, traceEnable ? "1" : "0", g_crashFileName.c_str(), g_use_runtime_api?"1":"0",nullptr};
       if (-1 == execve(argv[0], const_cast<char *const *>(&argv[0]),
                        const_cast<char *const *>(envp.get()))) {
           LOGE("aaaaaaaa execve failed errno %s \n", strerror(errno));
@@ -533,7 +536,7 @@ void doExec(int fdClient, int fdServer, bool traceEnable, bool startupPie) {
       mcfile << "jsengine WeexJSConnection::doExec start execve so name:" << executableName
              << std::endl;
 #endif
-      const char *argv[] = {executableName.c_str(), fdStr, fdServerStr, traceEnable ? "1" : "0", g_crashFileName.c_str(), nullptr};
+      const char *argv[] = {executableName.c_str(), fdStr, fdServerStr, traceEnable ? "1" : "0", g_crashFileName.c_str(),g_use_runtime_api?"1":"0", nullptr};
       if (-1 == execve(argv[0], const_cast<char *const *>(&argv[0]),
                        const_cast<char *const *>(envp.get()))) {
           LOGE("bbbbbbbbbbbb execve failed errno %s \n", strerror(errno));

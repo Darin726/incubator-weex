@@ -42,6 +42,8 @@ public:
 
     bool repeat = false;
 
+    bool from_instance_ = true;
+
     WeexGlobalObject* global_object_;
 
     explicit TimerTask(String id, uint32_t function, uint64_t millSecTimeout, WeexGlobalObject* global_object, bool repeat = false);
@@ -49,9 +51,6 @@ public:
     explicit TimerTask(TimerTask *timerTask);
 
     TimerTask(TimerTask &timerTask);
-
-private:
-
 
 };
 

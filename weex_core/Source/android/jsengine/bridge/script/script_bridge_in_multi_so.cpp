@@ -35,7 +35,8 @@
 static FunctionsExposedByCore *g_functions_exposed_by_core = nullptr;
 
 extern "C" FunctionsExposedByJS *ExchangeJSBridgeFunctions(
-    FunctionsExposedByCore *functions) {
+    FunctionsExposedByCore *functions, bool useRunTimeApi) {
+  WeexEnv::getEnv()->setUseRunTimeApi(useRunTimeApi);
   g_functions_exposed_by_core = functions;
   return weex::bridge::js::ScriptBridgeInMultiSo::GetExposedFunctions();
 }

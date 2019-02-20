@@ -27,9 +27,11 @@
 #include "core/render/manager/render_manager.h"
 #include "core/bridge/eagle_bridge.h"
 #include "wson/wson_parser.h"
+#include "core/parser/action_args_check.h"
 #ifdef OS_ANDROID
 #include <base/time_calculator.h>
 #include "android/weex_extend_js_api.h"
+#include "android/utils/params_utils.h"
 #endif
 
 namespace WeexCore {
@@ -51,6 +53,18 @@ inline char *copyStr(const char *str, int length = 0) {
 void CoreSideInScript::CallNative(const char *page_id, const char *task,
                                   const char *callback) {
   if (page_id == nullptr || task == nullptr) return;
+
+  if (isUseRunTimeApi()){
+      if(isCallNativeToFinish(task)){
+          RenderManager::GetInstance()->CreateFinish(page_id);
+      } else{
+          WeexCoreManager::Instance()
+                  ->getPlatformBridge()
+                  ->platform_side()
+                  ->CallNative(page_id, task, callback);
+      }
+      return;
+  }
 
   std::string task_str(task);
   std::string target_str("[{\"module\":\"dom\",\"method\":\"createFinish\","

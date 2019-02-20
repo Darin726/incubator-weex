@@ -199,7 +199,11 @@ public class WXBridge implements IWXBridge {
    */
   @CalledByNative
   public int callNative(String instanceId, byte[] tasks, String callback) {
-    return callNative(instanceId, (JSONArray) JSON.parseArray(new String(tasks)), callback);
+
+    String taskStr = new String(tasks);
+   // Log.e(TAG, "callNative: instanceId:"+instanceId +"| task :"+taskStr +"| callBack :"+callback );
+
+    return callNative(instanceId, (JSONArray) JSON.parseArray(taskStr), callback);
   }
 
   @Override

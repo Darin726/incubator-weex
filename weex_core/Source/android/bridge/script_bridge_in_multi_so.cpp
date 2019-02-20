@@ -52,7 +52,7 @@ ScriptBridgeInMultiSo::ScriptBridgeInMultiSo() {
         LOGE("dlopen so and call function");
 
         typedef FunctionsExposedByJS *(*ExchangeJSBridgeFunctions)(
-            FunctionsExposedByCore *);
+            FunctionsExposedByCore *,bool);
         auto exchange_script_bridge_functions =
             (ExchangeJSBridgeFunctions)dlsym(handle,
                                              "ExchangeJSBridgeFunctions");
@@ -63,7 +63,7 @@ ScriptBridgeInMultiSo::ScriptBridgeInMultiSo() {
         FunctionsExposedByCore *platform_expose_functions =
             GetExposedFunctions();
         auto script_side_functions =
-            exchange_script_bridge_functions(platform_expose_functions);
+            exchange_script_bridge_functions(platform_expose_functions,isUseRunTimeApi());
 
         static_cast<bridge::script::ScriptSideInMultiSo *>(script_side())
             ->set_script_side_functions(script_side_functions);

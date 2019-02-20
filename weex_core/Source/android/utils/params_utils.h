@@ -45,6 +45,8 @@ std::vector<INIT_FRAMEWORK_PARAMS*> initFromParam(
 
 bool isSingleProcess();
 
+bool isUseRunTimeApi();
+
 jstring getJsonData(JNIEnv* env, jobjectArray jargs, int index);
 
 void addParamsFromJArgs(std::vector<VALUE_WITH_TYPE*>& params,

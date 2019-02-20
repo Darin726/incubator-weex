@@ -1,6 +1,18 @@
 // { "framework": "Vue" }
 "use weex:vue";
 
+
+function printObject(msg,ob){
+  var keys = [];
+  var values = [];
+  for(var itemKey in ob){
+    //keys.push(itemKey);
+    //values.push(typeof(ob[itemKey]));
+    nativeLog(msg + "| key :"+itemKey + ",valType:"+typeof(ob[itemKey]) );
+  }
+  //nativeLog(msg + "| keys: "+JSON.stringify(keys) + "|val :"+JSON.stringify(values));
+}
+
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -273,6 +285,10 @@ exports.saveData = saveData;
 exports.readData = readData;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+printObject("[demo] before requireModule, weex kes:",weex);
+nativeLog("[demo]requireModule,print requireModule :"+weex.requireModule);
+nativeLog("[demo]requireModule,print config :"+weex.config);
 
 var stream = weex.requireModule('stream');
 var storage = weex.requireModule('storage');

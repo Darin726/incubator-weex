@@ -457,6 +457,8 @@ namespace weex {
                                                          const char *func,
                                                          const char *exception_string) {
 
+                LOGE("ReportException error on instance %s ,func:%s ,exception:%s", page_id,func,exception_string);
+
                 BackToWeexCoreQueue::IPCTask *ipc_task = new BackToWeexCoreQueue::IPCTask(
                         IPCProxyMsg::REPORTEXCEPTION);
                 ipc_task->addParams(page_id);

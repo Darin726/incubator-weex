@@ -41,6 +41,7 @@ TimerTask::TimerTask(TimerTask *timerTask) {
     this->m_function = timerTask->m_function;
     this->when = microTime() + timerTask->timeout * TIMESPCE;
     this->global_object_ = timerTask->global_object_;
+    this->from_instance_ = timerTask->from_instance_;
 }
 
 TimerTask::TimerTask(TimerTask &timerTask) {
@@ -51,4 +52,5 @@ TimerTask::TimerTask(TimerTask &timerTask) {
     this->m_function = timerTask.m_function;
     this->when = microTime() + timerTask.timeout * TIMESPCE;
     this->global_object_ = timerTask.global_object_;
+    this->from_instance_ = timerTask.from_instance_;
 }

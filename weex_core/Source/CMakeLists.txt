@@ -70,6 +70,7 @@ set(COMMON_SRCS
   ./core/bridge/platform/core_side_in_platform.cpp
   ./core/bridge/script/core_side_in_script.cpp
   ./core/parser/dom_wson.cpp
+  ./core/parser/action_args_check.cpp
 
    ./core/network/http_module.cc
         )

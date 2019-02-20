@@ -52,14 +52,19 @@ void WeexEnv::initJSC(bool isMultiProgress) {
           // return false;
       }
 
-      Options::enableRestrictedOptions(true);
+      if(WeexEnv::getEnv()->isUseRunTimeApi()){
+          WTF::initializeMainThread();
+          initHeapTimer();
+      } else{
+          Options::enableRestrictedOptions(true);
 // Initialize JSC before getting VM.
-      WTF::initializeMainThread();
-      initHeapTimer();
-      JSC::initializeThreading();
+          WTF::initializeMainThread();
+          initHeapTimer();
+          JSC::initializeThreading();
 #if ENABLE(WEBASSEMBLY)
-      JSC::Wasm::enableFastMemory();
+          JSC::Wasm::enableFastMemory();
 #endif
+      }
     });
 }
 void WeexEnv::init_crash_handler(std::string crashFileName) {

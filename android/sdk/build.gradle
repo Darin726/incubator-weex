@@ -153,6 +153,7 @@ android {
         versionName project.version
         ndk {
             abiFilters "armeabi-v7a","armeabi","x86"
+            //abiFilters "armeabi-v7a"
         }
 
         externalNativeBuild {

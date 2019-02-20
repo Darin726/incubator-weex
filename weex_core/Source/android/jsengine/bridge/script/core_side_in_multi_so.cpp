@@ -165,6 +165,7 @@ std::unique_ptr<WeexJSResult> CoreSideInMultiSo::DispatchMessageSync(
 
 void CoreSideInMultiSo::ReportException(const char *page_id, const char *func,
                                         const char *exception_string) {
+  LOGE("ReportException error on instance %s ,func:%s ,exception:%s", page_id,func,exception_string);
   functions_exposed_by_core_->funcReportException(page_id, func,
                                                   exception_string);
 }

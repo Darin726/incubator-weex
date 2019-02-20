@@ -27,6 +27,7 @@
 #include "android/jsengine/bridge/script/script_bridge_in_multi_process.h"
 #include "android/jsengine/bridge/script/core_side_in_multi_process.h"
 #include "android/jsengine/object/weex_env.h"
+#include "js_runtime/weex/object/weex_runtime_v2.h"
 
 void WeexTaskQueue::run(WeexTask *task) {
     if(task == nullptr || WeexEnv::getEnv()->is_app_crashed()) {
@@ -77,9 +78,11 @@ WeexTask *WeexTaskQueue::getTask() {
     return task;
 }
 
-int WeexTaskQueue::addTimerTask(String id, uint32_t function, int taskId, WeexGlobalObject* global_object, bool one_shot) {
+int WeexTaskQueue::addTimerTask(String id, uint32_t function, int taskId, WeexGlobalObject* global_object, bool one_shot, bool is_from_instance) {
+    //LOGE("[weex-binding ]addTimerTask  on ==> taskquene %d",taskId);
     WeexTask *task = new NativeTimerTask(id, function,taskId, one_shot);
     task->set_global_object(global_object);
+    task->is_from_instance = is_from_instance;
     return _addTask(
             task,
             false);
@@ -119,7 +122,15 @@ static void *startThread(void *td) {
     self->isInitOk = true;
 
     if (self->weexRuntime == nullptr) {
-        self->weexRuntime = new WeexRuntime(new TimerQueue(self),WeexEnv::getEnv()->scriptBridge(), self->isMultiProgress);
+        if (WeexEnv::getEnv()->isUseRunTimeApi()){
+            LOGE("[weex_plan] new runtime");
+            self->weexRuntime = new WeexRuntimeV2(new TimerQueue(self),WeexEnv::getEnv()->scriptBridge(), self->isMultiProgress);
+        } else{
+            LOGE("[weex_plan] jsc");
+            self->weexRuntime = new WeexRuntime(new TimerQueue(self),WeexEnv::getEnv()->scriptBridge(), self->isMultiProgress);
+        }
+       //
+
         // init IpcClient in Js Thread
 //        if (self->isMultiProgress) {
 //            auto *client = new WeexIPCClient(WeexEnv::getEnv()->getIpcClientFd());

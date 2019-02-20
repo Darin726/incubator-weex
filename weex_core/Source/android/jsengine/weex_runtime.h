@@ -32,70 +32,84 @@ namespace WeexCore {
 }
 class WeexRuntime {
 
-public:
-    WeexCore::ScriptBridge* script_bridge_;
+private:
     std::unique_ptr<WeexObjectHolder> weexObjectHolder;
     std::map<std::string, WeexObjectHolder *> appWorkerContextHolderMap;
+public:
+
+    WeexCore::ScriptBridge* script_bridge_;
 
     RefPtr<VM> m_globalVM;
+
+    explicit WeexRuntime();
 
   explicit WeexRuntime(TimerQueue* timeQueue, bool isMultiProgress = true);
 
     explicit WeexRuntime(TimerQueue* timeQueue, WeexCore::ScriptBridge *script_bridge, bool isMultiProgress = true);
 
-    bool hasInstanceId(String &id);
+    virtual bool hasInstanceId(String &id);
 
-    int initFramework(IPCArguments *arguments);
-    int initFramework(const String &script, std::vector<INIT_FRAMEWORK_PARAMS *> &params);
+    virtual int initFramework(IPCArguments *arguments);
 
-    int initAppFrameworkMultiProcess(const String &instanceId, const String &appFramework, IPCArguments *arguments);
+    virtual int initFramework(const String &script, std::vector<INIT_FRAMEWORK_PARAMS *> &params);
 
-    int
+    virtual int initAppFrameworkMultiProcess(const String &instanceId, const String &appFramework, IPCArguments *arguments);
+
+    virtual int
     initAppFramework(const String &instanceId, const String &appFramework, std::vector<INIT_FRAMEWORK_PARAMS *> &params);
 
-    int createAppContext(const String &instanceId, const String &jsBundle);
+    virtual int createAppContext(const String &instanceId, const String &jsBundle);
 
-    std::unique_ptr<WeexJSResult> exeJSOnAppWithResult(const String &instanceId, const String &jsBundle);
+    virtual std::unique_ptr<WeexJSResult> exeJSOnAppWithResult(const String &instanceId, const String &jsBundle);
 
-    int callJSOnAppContext(IPCArguments *arguments);
+    virtual int callJSOnAppContext(IPCArguments *arguments);
 
-    int callJSOnAppContext(const String &instanceId, const String &func, std::vector<VALUE_WITH_TYPE *> &params);
+    virtual int callJSOnAppContext(const String &instanceId, const String &func, std::vector<VALUE_WITH_TYPE *> &params);
 
-    int destroyAppContext(const String &instanceId);
+    virtual int destroyAppContext(const String &instanceId);
 
-    int exeJsService(const String &source);
+    virtual int exeJsService(const String &source);
 
-    int exeCTimeCallback(const String &source);
+    virtual int exeCTimeCallback(const String &source);
 
 //    int exeJS(const String &instanceId, const String &nameSpace, const String &func, IPCArguments *arguments);
 
-    int
+    virtual int
     exeJS(const String &instanceId, const String &nameSpace, const String &func, std::vector<VALUE_WITH_TYPE *> &params);
 
 //    std::unique_ptr<WeexJSResult>  exeJSWithResult(const String &instanceId, const String &nameSpace, const String &func,
 //                          IPCArguments *arguments);
 
-    std::unique_ptr<WeexJSResult>  exeJSWithResult(const String &instanceId, const String &nameSpace, const String &func,
+    virtual std::unique_ptr<WeexJSResult>  exeJSWithResult(const String &instanceId, const String &nameSpace, const String &func,
                           std::vector<VALUE_WITH_TYPE *> &params);
 
-    void exeJSWithCallback(const String &instanceId, const String &nameSpace, const String &func,
+    virtual void exeJSWithCallback(const String &instanceId, const String &nameSpace, const String &func,
                           std::vector<VALUE_WITH_TYPE *> &params, long callback_id);
 
-    int createInstance(const String &instanceId, const String &func, const String &script, const String &opts,
+    virtual int createInstance(const String &instanceId, const String &func, const String &script, const String &opts,
                        const String &initData, const String &extendsApi,
                        std::vector<INIT_FRAMEWORK_PARAMS*>& params);
 
-    std::unique_ptr<WeexJSResult> exeJSOnInstance(const String &instanceId, const String &script);
+    virtual std::unique_ptr<WeexJSResult> exeJSOnInstance(const String &instanceId, const String &script);
 
-    int destroyInstance(const String &instanceId);
+    virtual int destroyInstance(const String &instanceId);
 
-    int updateGlobalConfig(const String &config);
+    virtual int updateGlobalConfig(const String &config);
 
-    int exeTimerFunction(const String &instanceId, uint32_t timerFunction, JSGlobalObject *globalObject);
+    virtual int exeTimerFunction(const String &instanceId, uint32_t timerFunction, JSGlobalObject *globalObject);
 
-    WeexObjectHolder * getLightAppObjectHolder(const String &instanceId);
 
-    void removeTimerFunction(const uint32_t timerFunction, JSGlobalObject *globalObject);
+    virtual WeexObjectHolder * getLightAppObjectHolder(const String &instanceId);
+
+    virtual void removeTimerFunction(const uint32_t timerFunction, JSGlobalObject *globalObject);
+
+    virtual int exeTimerFunctionForRunTimeApi(const String &instanceId, uint32_t timerFunction, bool is_from_instance){
+        return 0;
+    }
+
+    virtual void removeTimerFunctionForRunTimeApi(const String &instanceId,const uint32_t timerFunction, bool is_from_instance){
+
+    }
 
 private:
     int _initFramework(const String &source);

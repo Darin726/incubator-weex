@@ -26,6 +26,12 @@
 #include "dom_wson.h"
 #include "wson/wson.h"
 #include "wson/wson_parser.h"
+#ifdef test_log
+#include "base/utils/log_utils.h"
+#else
+#define LOGW
+#define LOGE
+#endif
 
 namespace WeexCore {
 
@@ -42,6 +48,7 @@ namespace WeexCore {
     RenderObject *parserWson2RenderObject(wson_parser& parser, RenderObject *parent, int index, const std::string &pageId){
         int objectType = parser.nextType();
         if(!parser.isMap(objectType)){
+            LOGE("[dom_wson],parser is not Map !!!!!!!!!");
             parser.skipValue(objectType);
             return nullptr;
         }

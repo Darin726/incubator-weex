@@ -42,7 +42,7 @@ public:
 
     void removeAllTask(String id);
 
-    int addTimerTask(String id, uint32_t function, int taskId, WeexGlobalObject* global_object, bool one_shot);
+    int addTimerTask(String id, uint32_t function, int taskId, WeexGlobalObject* global_object, bool one_shot, bool is_from_instance);
 
     void start();
 

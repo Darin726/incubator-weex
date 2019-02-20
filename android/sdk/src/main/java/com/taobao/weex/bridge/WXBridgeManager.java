@@ -43,6 +43,7 @@ import com.taobao.weex.WXEnvironment;
 import com.taobao.weex.WXSDKEngine;
 import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.WXSDKManager;
+import com.taobao.weex.adapter.IWXConfigAdapter;
 import com.taobao.weex.adapter.IWXJSExceptionAdapter;
 import com.taobao.weex.adapter.IWXJsFileLoaderAdapter;
 import com.taobao.weex.adapter.IWXJscProcessManager;
@@ -190,6 +191,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
   // add for cloud setting, default value is false.
   // weexcore use single process or not
   private static boolean isUseSingleProcess = false;
+
   // add for cloud setting, default value is false.
   // jsEngine use multiThread or not
   private volatile static boolean isJsEngineMultiThreadEnable = false;
@@ -272,6 +274,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
 //      }
     }
   }
+
   public boolean jsEngineMultiThreadEnable() {
     return isJsEngineMultiThreadEnable;
   }
@@ -2091,6 +2094,21 @@ public class WXBridgeManager implements Callback, BactchExecutor {
   private WXParams assembleDefaultOptions() {
     checkJsEngineMultiThread();
 
+    boolean isUseRuntimeApi = true;
+    try {
+      IWXConfigAdapter configAdapter = WXSDKManager.getInstance().getWxConfigAdapter();
+      if (null != configAdapter){
+        String value = configAdapter.getConfig("wxapm","is_use_runtime_api","true");
+        isUseRuntimeApi = Boolean.valueOf(value);
+      }
+      IWXUserTrackAdapter userTrackAdapter = WXSDKManager.getInstance().getIWXUserTrackAdapter();
+      if (null != userTrackAdapter){
+        userTrackAdapter.commit(null,isUseRuntimeApi?"useRunTimeApi":"useJscApi","counter",null,null);
+      }
+    }catch (Throwable e){
+      e.printStackTrace();
+    }
+
     Map<String, String> config = WXEnvironment.getConfig();
     WXParams wxParams = new WXParams();
     wxParams.setPlatform(config.get(WXConfig.os));
@@ -2103,6 +2121,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
     wxParams.setLogLevel(config.get(WXConfig.logLevel));
     wxParams.setLayoutDirection(config.get(WXConfig.layoutDirection));
     wxParams.setUseSingleProcess(isUseSingleProcess ? "true" : "false");
+    wxParams.setUseRunTimeApi(isUseRuntimeApi);
     wxParams.setCrashFilePath(WXEnvironment.getCrashFilePath(WXEnvironment.getApplication().getApplicationContext()));
     wxParams.setLibJssPath(WXEnvironment.getLibJssRealPath());
     wxParams.setLibIcuPath(WXEnvironment.getLibJssIcuPath());

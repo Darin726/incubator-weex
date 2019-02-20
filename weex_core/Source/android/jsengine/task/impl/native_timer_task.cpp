@@ -21,6 +21,7 @@
 //
 
 #include "native_timer_task.h"
+#include "android/jsengine/object/weex_env.h"
 
 NativeTimerTask::NativeTimerTask(const String &instanceId, uint32_t function, int taskId, bool one_shot)
         : WeexTask(instanceId, taskId) {
@@ -30,8 +31,17 @@ NativeTimerTask::NativeTimerTask(const String &instanceId, uint32_t function, in
 
 void NativeTimerTask::run(WeexRuntime *runtime) {
 //    LOGE("NativeTimerTask is running");
-    runtime->exeTimerFunction(instanceId, timerFunction, global_object());
-    // if not repeatTimer, delete the js timer function now
-    if (!repeatTimer)
-        runtime->removeTimerFunction(timerFunction, global_object());
+    if (!WeexEnv::getEnv()->isUseRunTimeApi()){
+        //LOGE("jsc api --> NativeTimerTask : run ====>");
+        runtime->exeTimerFunction(instanceId, timerFunction, global_object());
+        // if not repeatTimer, delete the js timer function now
+        if (!repeatTimer)
+            runtime->removeTimerFunction(timerFunction, global_object());
+    } else{
+        //LOGE("runtime api --> NativeTimerTask : run ====>");
+        runtime->exeTimerFunctionForRunTimeApi(instanceId,timerFunction,is_from_instance);
+        if (!repeatTimer)
+            runtime->removeTimerFunctionForRunTimeApi(instanceId,timerFunction,is_from_instance);
+    }
+
 }

@@ -55,12 +55,14 @@ struct ThreadData {
     int fd_client;
     bool enableTrace;
     char* crashFileName;
+    bool useRunTimeApi;
 };
 
 static void *threadEntry(void *_td) {
     ThreadData *td = static_cast<ThreadData *>(_td);
     //  server = new weex::IPCServer(static_cast<int>(td->fd),
     //  static_cast<bool>(td->enableTrace));
+    WeexEnv::getEnv()->setUseRunTimeApi(td->useRunTimeApi);
     server = new WeexJSServer(static_cast<int>(td->fd), static_cast<int>(td->fd_client),
                               static_cast<bool>(td->enableTrace), td->crashFileName);
     // Register handler for bridge
@@ -79,6 +81,7 @@ extern "C" int serverMain(int argc, char **argv) {
     unsigned long fd;
     unsigned long fd_client = 0;
     unsigned long enableTrace;
+    unsigned long useRunTimeApi;
     if (argc < 4) {
         LOGE("argc is not correct");
         _exit(1);
@@ -87,11 +90,13 @@ extern "C" int serverMain(int argc, char **argv) {
     fd_client = parseUL(argv[2]);
     enableTrace = parseUL(argv[3]);
     char* fileName = argv[4];
+    useRunTimeApi = parseUL(argv[5]);
     pthread_attr_t threadAttr;
     pthread_attr_init(&threadAttr);
     pthread_attr_setstacksize(&threadAttr, 10 * 1024 * 1024);
     pthread_t thread;
-    ThreadData td = {static_cast<int>(fd), static_cast<int>(fd_client), static_cast<bool>(enableTrace),fileName};
+    ThreadData td = {static_cast<int>(fd), static_cast<int>(fd_client), static_cast<bool>(enableTrace),fileName,
+                     static_cast<bool>(useRunTimeApi)};
     pthread_create(&thread, &threadAttr, threadEntry, &td);
     void *rdata;
     pthread_join(thread, &rdata);
