@@ -22,13 +22,13 @@
 #ifndef JCONTEXT_H
 #define JCONTEXT_H
 
-#include "ecma_builtins.h"
-#include "ecma_jobqueue.h"
-#include "jmem.h"
-#include "qking_internal.h"
-#include "qking_port.h"
-#include "re_bytecode.h"
-#include "vm_defines.h"
+#include "core/ecma/builtin-objects/ecma_builtins.h"
+#include "core/ecma/operations/ecma_jobqueue.h"
+#include "core/include/qking_internal.h"
+#include "core/include/qking_port.h"
+#include "core/jmem/jmem.h"
+#include "core/parser/regexp/re_bytecode.h"
+#include "core/vm/vm_defines.h"
 
 /** \addtogroup context Context
  * @{

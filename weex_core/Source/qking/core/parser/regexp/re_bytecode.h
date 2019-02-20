@@ -21,7 +21,7 @@
 
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
-#include "ecma_globals.h"
+#include "core/ecma/base/ecma_globals.h"
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

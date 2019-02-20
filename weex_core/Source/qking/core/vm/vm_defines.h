@@ -19,7 +19,7 @@
 #ifndef VM_DEFINES_H
 #define VM_DEFINES_H
 
-#include "ecma_globals.h"
+#include "core/ecma/base/ecma_globals.h"
 
 /**
  * Context of interpreter, related to a JS stack frame
@@ -44,7 +44,8 @@ typedef struct vm_frame_ctx_t {
 
   unsigned long *pc_current_p;
   unsigned long *pc_start_p; /**< current function object */
-  uint32_t pc_count;         /**< current function object */
+  uint32_t pc_count;         /**< current function instructions count */
+  uint32_t pc_current_idx;   /**< current function running instruction index */
 
 } vm_frame_ctx_t;
 

@@ -19,7 +19,7 @@
 #ifndef LIT_MAGIC_STRINGS_H
 #define LIT_MAGIC_STRINGS_H
 
-#include "config.h"
+#include "core/config.h"
 #include "lit_globals.h"
 #ifdef __cplusplus
 extern "C" {

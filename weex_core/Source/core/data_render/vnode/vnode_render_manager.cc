@@ -194,7 +194,7 @@ void VNodeRenderManager::InitVM() {
     g_vm = new VM();
   }
 }
-    
+
 void VNodeRenderManager::CreatePage(const std::string &input, const std::string &page_id, const  std::string &options, const std::string &init_data, std::function<void(const char*)> exec_js) {
     std::string err = CreatePageWithContent(input, page_id, options, init_data, exec_js);
     if (!err.empty()) {
@@ -371,7 +371,7 @@ void VNodeRenderManager::DestroyExecutor() {
             delete context;
         }
         executors_.erase(iter);
-        
+
     } while (0);
 }
 
@@ -402,6 +402,8 @@ std::string VNodeRenderManager::CreatePageWithContent(const uint8_t *contents, s
     if (!qking_api_execute_code(executor, err)) {
         DestroyExecutor();
         return err;
+    } else {
+      err = "";
     }
 //    if (context->root() == NULL) {
 //        err = "Root vonde is null";
@@ -421,7 +423,7 @@ void VNodeRenderManager::CreatePage(const char *contents, size_t length, const s
         WeexCore::WeexCoreManager::Instance()->getPlatformBridge()->platform_side()->ReportException(page_id.c_str(), nullptr, err.c_str());
     }
 }
-    
+
 bool VNodeRenderManager::RefreshPageWithExecutor(const std::string& page_id,
                                      const std::string& init_data) {
     do {
@@ -466,7 +468,7 @@ bool VNodeRenderManager::RefreshPageWithExecutor(const std::string& page_id,
           ->platform_side()
           ->RefreshFinish(page_id.c_str(), nullptr, "");
       return true;
-        
+
     } while (0);
 
     return false;
@@ -530,7 +532,7 @@ bool VNodeRenderManager::ClosePage(const std::string& page_id) {
     }
     return true;
 }
-    
+
 static uint32_t StringToUint32(const std::string &s) {
     uint32_t val = 0;
     std::stringstream ss;
@@ -538,7 +540,7 @@ static uint32_t StringToUint32(const std::string &s) {
     ss >> val;
     return val;
 }
-    
+
 void VNodeRenderManager::InvokeCallback(const std::string& page_id,
                                         const std::string& callback_id,
                                         const std::string& data,
@@ -568,7 +570,7 @@ void VNodeRenderManager::InvokeCallback(const std::string& page_id,
         DestroyExecutor();
     }
 }
-    
+
 void VNodeRenderManager::FireEventWithExecutor(const std::string &page_id, const std::string &ref, const std::string &event,const std::string &args,const std::string &dom_changes)
 {
     do {
@@ -597,11 +599,11 @@ void VNodeRenderManager::FireEventWithExecutor(const std::string &page_id, const
           break;
         }
         RAX_NS::RaxPropsHolder *native_ele = dynamic_cast<RAX_NS::RaxPropsHolder*>(pElement);
-        
+
         const auto& events = native_ele->get_events();
         const auto& it = events.find(event);
         if (it == events.end()) {
-          LOGE("FireEvent err: node event registry not found for event: %s",event.c_str());
+          LOGW("FireEvent err: node event registry not found for event: %s",event.c_str());
           break;
         }
 
@@ -620,19 +622,19 @@ void VNodeRenderManager::FireEventWithExecutor(const std::string &page_id, const
             is_error = true;
         }
         if (qking_value_is_error(completion_value)) {
-            LOGE("FireEvent error, %s",string_from_qking_error(completion_value).c_str());
+            LOGE("FireEvent error(%s) %s",event.c_str(),string_from_qking_error(completion_value).c_str());
         } else {
-            LOGE("FireEvent succ: event: %s",event.c_str());
+            LOGI("FireEvent succ: event: %s",event.c_str());
         }
         qking_release_value(func_args);
         qking_release_value(completion_value);
         if (is_error) {
             DestroyExecutor();
         }
-        
+
     } while (0);
 }
-        
+
 void VNodeRenderManager::FireEvent(const std::string &page_id, const std::string &ref, const std::string &event,const std::string &args,const std::string &dom_changes) {
     do {
         FireEventWithExecutor(page_id, ref, event, args, dom_changes);

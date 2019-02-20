@@ -31,6 +31,14 @@ typedef void *qking_executor_t;
 
 typedef void *qking_external_context_t;
 
+typedef struct {
+  uint32_t empty_sec0 : 32;
+  uint32_t magic_code : 32;
+  uint8_t header_byte_offset : 8;
+  uint32_t compatible_version : 32;
+  uint32_t mem_size : 32;
+} qking_info_section_struct;
+
 /**
  * Qking API Error object types.
  */
@@ -116,9 +124,15 @@ typedef qking_value_t (*qking_external_handler_t)(
 void qking_register_handler_fatal_error(
     qking_port_default_fatal_t fatal_handler);
 
+void qking_register_handler_debugger_fatal_error(
+    qking_port_default_fatal_t fatal_handler);
+
 bool qking_is_api_available(void);
 
 qking_executor_t qking_create_executor(qking_external_context_t context);
+
+qking_executor_t qking_create_executor_size(qking_external_context_t context,
+                                            uint32_t heap_size);
 
 void qking_set_current_executor(qking_executor_t executor);
 
@@ -158,6 +172,9 @@ qking_value_t qking_construct_object(const qking_value_t func_obj_val,
  */
 bool qking_set_assembly_code(qking_executor_t executor, uint8_t *code,
                              size_t size, qking_value_t *error_value);
+
+bool qking_decode_binary_info(uint8_t *code, size_t size,
+                              qking_info_section_struct *info);
 
 /**
  * Register a function in the global object.

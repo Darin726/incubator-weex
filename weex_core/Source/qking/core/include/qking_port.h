@@ -37,6 +37,7 @@ typedef enum {
   ERR_SYSCALL = 11,
   ERR_REF_COUNT_LIMIT = 12,
   ERR_DISABLED_BYTE_CODE = 13,
+  ERR_EXCEPTION = 14,
   ERR_FAILED_INTERNAL_ASSERTION = 120
 } qking_fatal_code_t;
 

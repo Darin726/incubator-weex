@@ -568,8 +568,9 @@ static ecma_value_t vm_run_loop(
     while (pc != pc_end) {
       Instruction instruction = *pc++;
       OPCode op = (GET_OP_CODE(instruction));
+      frame_ctx_p->pc_current_idx = (uint32_t)(pc - func_state_p->pc - 1);
 #ifdef DEBUG_LOG_ENABLE
-      qking_oputil_print_code(instruction, pc - func_state_p->pc - 1);
+      qking_oputil_print_code(instruction, frame_ctx_p->pc_current_idx);
 #endif
       switch (op) {
         case OP_MOVE: {

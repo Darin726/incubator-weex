@@ -19,10 +19,10 @@
 #ifndef ECMA_GLOBALS_H
 #define ECMA_GLOBALS_H
 
-#include "config.h"
-#include "jmem.h"
-#include "jrt.h"
-#include "lit_magic_strings.h"
+#include "core/config.h"
+#include "core/jmem/jmem.h"
+#include "core/jrt/jrt.h"
+#include "core/lit/lit_magic_strings.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -926,6 +926,8 @@ typedef struct ecma_closure_t {
 typedef struct ecma_compiled_function_state_t {
   ecma_compiled_code_t header;
   ecma_value_t constants;
+  int32_t func_symbol_idx;
+  int32_t *pp_symbols_idx;
   struct ecma_func_in_closure_t **pp_in_closure;
   uint32_t in_closure;
   struct ecma_func_out_closure_t **pp_out_closure;

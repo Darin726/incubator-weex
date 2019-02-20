@@ -19,7 +19,7 @@
 #ifndef ECMA_COMPILED_CODE_H
 #define ECMA_COMPILED_CODE_H
 
-#include "ecma_globals.h"
+#include "core/ecma/base/ecma_globals.h"
 
 #ifdef __cplusplus
 extern "C" {

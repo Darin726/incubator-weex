@@ -75,6 +75,9 @@ typedef struct {
   c_str_t* regex_flag_array;
   size_t regex_flag_array_size;
 
+  char** symbols_pp;
+  size_t symbols_size;
+
   const char* err_msg;
 } exec_state_decoder_t;
 
@@ -87,6 +90,9 @@ bool qking_decoding_binary(exec_state_decoder_t* decoder, const char** err_str);
 
 void qking_decoder_create_string_table(exec_state_decoder_t* decoder,
                                        size_t size);
+
+void qking_decoder_create_symbols_table(exec_state_decoder_t* decoder,
+                                        size_t size);
 
 void qking_decoder_create_regex_flag_table(exec_state_decoder_t* decoder,
                                            size_t size);

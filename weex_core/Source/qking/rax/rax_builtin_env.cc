@@ -101,8 +101,38 @@ static qking_value_t CreateElement(const qking_value_t function_obj,
     children_array = qking_get_property_by_name_lit(
         props, QKING_LIT_MAGIC_STRING_EX_CHILDREN);
   }
+
   // resolve default props
-  // todo not supported yet.
+  if (qking_value_is_object(type)) {
+    qking_value_t default_props =
+        qking_get_property_by_name(type, "defaultProps");
+    if (qking_value_is_error(default_props) ||
+        qking_value_is_undefined(default_props) ||
+        !qking_value_is_object(default_props)) {
+      // no props
+    } else {
+      qking_foreach_object_property_of(
+          default_props,
+          [](const qking_value_t property_name,
+             const qking_value_t property_value, void *user_data_p) -> bool {
+            qking_value_t raw_props = *((qking_value_t *)user_data_p);
+            qking_value_t old_prop =
+                qking_get_property(raw_props, property_name);
+
+            if (qking_value_is_undefined(old_prop)) {
+              // no user prop, use default.
+              qking_release_value(
+                  qking_set_property(raw_props, property_name, property_value));
+            } else {
+              // has user prop, no-op
+            }
+            qking_release_value(old_prop);
+            return true;
+          },
+          &props, false, true, false);
+    }
+    qking_release_value(default_props);
+  }
 
   // flatten style
   {
@@ -238,6 +268,39 @@ static qking_value_t CloneElement(const qking_value_t function_obj,
 
       qking_release_value(tmp_pass.key_string);
       qking_release_value(tmp_pass.ref_string);
+
+      // resolve default props
+      if (qking_value_is_object(type)) {
+        qking_value_t default_props =
+            qking_get_property_by_name(type, "defaultProps");
+        if (qking_value_is_error(default_props) ||
+            qking_value_is_undefined(default_props) ||
+            !qking_value_is_object(default_props)) {
+          // no props
+        } else {
+          qking_foreach_object_property_of(
+              default_props,
+              [](const qking_value_t property_name,
+                 const qking_value_t property_value,
+                 void *user_data_p) -> bool {
+                qking_value_t raw_props = *((qking_value_t *)user_data_p);
+                qking_value_t old_prop =
+                    qking_get_property(raw_props, property_name);
+
+                if (qking_value_is_undefined(old_prop)) {
+                  // no user prop, use default.
+                  qking_release_value(qking_set_property(
+                      raw_props, property_name, property_value));
+                } else {
+                  // has user prop, no-op
+                }
+                qking_release_value(old_prop);
+                return true;
+              },
+              &props, false, true, false);
+        }
+        qking_release_value(default_props);
+      }
     }
   }
 

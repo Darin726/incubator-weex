@@ -60,6 +60,7 @@ extern "C" {
 // 运行时要用这个判断 EXEC_BINARY_CURRENT_VERSION
 // 表明了binary文件编译时的编译器version.
 // 同时也是当前vm支持的最大的binary文件编码version.
+#define EXEC_BINARY_MAGIC_SEG_START 0x00000004
 #define EXEC_BINARY_MAGIC_NUMBER 0x6d736100
 #define EXEC_BINARY_VM_SUPPORT_VERSION 8
 #define EXEC_BINARY_CURRENT_VERSION 9
@@ -72,6 +73,7 @@ typedef enum {
   EXEC_SECTION_STRING,
   EXEC_SECTION_FUNCTION,
   EXEC_SECTION_VALUEREF,
+  EXEC_SECTION_SYMBOL
 } ExecSection;
 
 typedef enum {
@@ -110,6 +112,8 @@ typedef enum {
   kValueFunctionInstructions,
   kValueFunctionConstantCount,
   kValueFunctionConstantPayload,
+  kValueFunctionSymbol,
+  kValueFunctionInstructionSymbol,
   kValueFunctionFinished = 255,
 } SectionFunctionKey;
 

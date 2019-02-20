@@ -27,9 +27,11 @@
 #include <functional>
 #include <sstream>
 #include "api/qking_api.h"
+#include "base/qking_string_utils.h"
 #include "rax_common.h"
 
 using namespace qking::api;
+using namespace qking::utils;
 
 #define THROW_JS_ERR_IF(expr, msg)                              \
   do {                                                          \
@@ -112,13 +114,6 @@ using namespace qking::api;
 
 RAX_NAME_SPACE_BEGIN
 extern const std::string ROOT_REF;
-
-template <typename T>
-std::string to_string(T n) {
-  std::ostringstream ss;
-  ss << n;
-  return ss.str();
-}
 
 class QKValueRef {
  public:

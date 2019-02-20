@@ -234,6 +234,23 @@ bool qking_decoding_binary(exec_state_decoder_t *decoder, const char **err_str) 
   if (qking_decoder_fstream_seek(decoder->stream, 0, SEEK_SET) < 0) {
     RAISE_ERR_MSG("file length zero error");
   }
+
+  uint32_t seg0 = *((uint32_t*)(decoder->stream->buffer+0));
+  uint32_t magic_code = *((uint32_t*)(decoder->stream->buffer+4));
+  if (seg0 == EXEC_BINARY_MAGIC_SEG_START  && magic_code == EXEC_BINARY_MAGIC_NUMBER) {
+    //has info section, skip it.
+    qking_info_section_struct *info = (qking_info_section_struct*)decoder->stream->buffer;
+    decoder->stream->seek += info->header_byte_offset;
+    if (info->compatible_version < EXEC_BINARY_VM_SUPPORT_VERSION) {
+      RAISE_ERR_MSG("decoding header target current vm not support this old binary");
+    }
+    if (info->compatible_version > EXEC_BINARY_CURRENT_VERSION){
+      RAISE_ERR_MSG("decoding header target current vm not support this newer binary");
+    }
+  } else {
+    //no-op, OP-CODE v8 has no info section.
+  }
+
   do {
     uint16_t section = 0;
     uint32_t section_length = 0;
@@ -273,6 +290,14 @@ bool qking_decoding_binary(exec_state_decoder_t *decoder, const char **err_str) 
              section_length);
         break;
       }
+      case EXEC_SECTION_SYMBOL:{
+        if (!qking_decoder_section_decode_symbols(decoder, section_length)) {
+            RAISE_DECODER_ERR_MSG();
+        }
+        LOGD("[Decode section] SectionValueRefDecoder, size: %u\n",
+               section_length);
+        break;
+      }
       default: {
         if (qking_decoder_fstream_seek(decoder->stream, section_length, SEEK_CUR) < 0) {
           RAISE_ERR_MSG("section decoding length error");
@@ -304,7 +329,7 @@ bool qking_decoding_binary(exec_state_decoder_t *decoder, const char **err_str) 
     exec_state_decoder_func_state_t *this_func = decoder->func_state_p_array+i;
 
     int32_t super = this_func->super_index;
-    if (super<0){
+    if (super < 0) {
       continue;
     }
 
@@ -360,6 +385,17 @@ void qking_decoder_create_string_table(exec_state_decoder_t *decoder, size_t siz
 
   decoder->string_array = (c_str_t *) jmem_system_malloc(sizeof(c_str_t) * alloc_size);
   decoder->string_array_size = size;
+}
+
+void qking_decoder_create_symbols_table(exec_state_decoder_t *decoder, size_t size) {
+  if (size > 0) {
+    size_t alloc_size = sizeof(char *) * size;
+    decoder->symbols_pp = (char **) malloc(alloc_size);
+    if (decoder->symbols_pp) {
+      memset(decoder->symbols_pp, 0, alloc_size);
+    }
+    decoder->symbols_size = size;
+  }
 }
 
 void qking_decoder_create_regex_flag_table(exec_state_decoder_t *decoder, size_t size) {
