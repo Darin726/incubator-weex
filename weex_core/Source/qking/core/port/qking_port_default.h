@@ -41,6 +41,8 @@ void qking_port_default_set_log_level(qking_log_level_t level);
 
 void qking_port_default_set_current_context(qking_context_t *context_p);
 
+void qking_port_default_debugger(void);
+
 /**
  * @}
  */

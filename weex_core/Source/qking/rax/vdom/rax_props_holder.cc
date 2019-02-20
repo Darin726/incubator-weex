@@ -2,14 +2,14 @@
 // Created by Xu Jiacheng on 2019-01-30.
 //
 
-#include "base/qking_common_logger.h"
 #include "rax_props_holder.h"
 #include <regex>
+#include "base/qking_common_logger.h"
 
 RAX_NAME_SPACE_BEGIN
 
 #ifdef QKING_PLATFORM_IOS
-static const char *IOS_POST_FIX = "\t\n\t\r";
+static const char* IOS_POST_FIX = "\t\n\t\r";
 #endif
 
 void RaxPropsHolder::SetNativeProps(

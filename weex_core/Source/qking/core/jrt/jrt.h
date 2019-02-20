@@ -22,8 +22,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "core/include/qking_port.h"
 #include "jrt_types.h"
-#include "qking_port.h"
 
 #ifdef __cplusplus
 extern "C" {

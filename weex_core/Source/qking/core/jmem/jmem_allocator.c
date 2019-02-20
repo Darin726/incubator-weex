@@ -272,7 +272,7 @@ jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t severi
 inline void* jmem_system_malloc(size_t size) {
 #ifdef JMEM_STATS
   jmem_heap_stats_t *heap_stats = &QKING_CONTEXT (jmem_heap_stats);
-  heap_stats->c_alloc_free_remain+=size;
+  heap_stats->c_alloc_free_remain += size;
   size_t * ret = malloc(sizeof(size_t) + size);
   *ret = size;
   return &ret[1];

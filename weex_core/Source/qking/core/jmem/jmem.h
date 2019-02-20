@@ -19,7 +19,7 @@
 #ifndef JMEM_H
 #define JMEM_H
 
-#include "jrt.h"
+#include "core/jrt/jrt.h"
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

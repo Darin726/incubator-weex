@@ -76,6 +76,10 @@ std::string qking_value_print(const qking_value_t value);
 void qking_api_register_weex_environment(void);
 #endif
 
+#ifdef QKING_ENABLE_EXTERNAL_UNIT_TEST_ENV
+void qking_api_register_test_environment(void);
+#endif
+
 qking_value_t qking_api_port_call_native_module(qking_executor_t executor,
                                                 const std::string &module,
                                                 const std::string &method,
@@ -92,6 +96,8 @@ void qking_api_register_variable(const char *name_p,
                                  const std::string &jsonstr);
 
 bool qking_api_execute_code(qking_executor_t executor, std::string &error);
+
+bool qking_api_get_last_exception(std::string &exception);
 
 bool qking_api_set_assembly_code(qking_executor_t executor, uint8_t *code,
                                  size_t size, std::string &error);

@@ -63,7 +63,7 @@ static vector<pair<string, string>>* CompareMap(
   for (auto it = oldMap.cbegin(); it != oldMap.cend(); it++) {
     auto pos = newMap.find(it->first);
     if (pos == newMap.end()) {
-      // key not exist, remove //todo check if this is correct
+      // key not exist, remove
       p_vec->push_back({it->first, ""});
     }
   }

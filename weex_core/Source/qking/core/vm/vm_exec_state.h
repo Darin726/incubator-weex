@@ -31,11 +31,14 @@ typedef struct {
   ecma_compiled_function_state_t *compiled_func_state;
   qking_context_t *context_p;
   qking_external_context_t *external_context_p;
+  char **symbols_pp;
+  uint32_t symbols_size;
+  char *exception_p;
 
 } qking_vm_exec_state_t;
 
 qking_vm_exec_state_t *qking_create_vm_exec_state(
-    qking_external_context_t external_context);
+    qking_external_context_t external_context, uint32_t heap_size);
 
 void qking_free_vm_exec_state(qking_vm_exec_state_t *exec_state_p);
 

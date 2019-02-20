@@ -460,7 +460,15 @@ int CoreSideInPlatform::CreateInstance(const char *instanceId, const char *func,
             auto env_obj = opts_json_value["env"];
             env_str = "";
             if (env_obj.is_object()) {
-                env_str = env_obj.dump();
+                const json11::Json& options = env_obj["options"];
+                const json11::Json::object& options_obj = options.object_items();
+                json11::Json::object new_env{
+                    env_obj.object_items()
+                };
+                for(auto &it :options_obj){
+                  new_env[it.first] = it.second;
+                }
+                env_str = json11::Json(new_env).dump();
             }
         }
         auto node_manager =

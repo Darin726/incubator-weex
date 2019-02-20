@@ -19,7 +19,7 @@
 #ifndef LIT_GLOBALS_H
 #define LIT_GLOBALS_H
 
-#include "jrt.h"
+#include "core/jrt/jrt.h"
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

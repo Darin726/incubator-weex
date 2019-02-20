@@ -18,6 +18,8 @@
  */
 package com.taobao.weex.bridge;
 
+import android.util.Log;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -37,6 +39,8 @@ import com.taobao.weex.utils.WXJsonUtils;
 import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.WXUtils;
 import com.taobao.weex.utils.WXWsonJSONSwitch;
+import com.taobao.weex.wson.Wson;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;

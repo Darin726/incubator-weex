@@ -66,15 +66,26 @@ static void qking_context_env_init() {
 #endif
 }
 
-qking_vm_exec_state_t *qking_create_vm_exec_state(qking_external_context_t external_context) {
+qking_vm_exec_state_t *qking_create_vm_exec_state(qking_external_context_t external_context, uint32_t heap_size) {
     qking_vm_exec_state_t *exec_state_p = NULL;
     do {
         exec_state_p = (qking_vm_exec_state_t *)(malloc(sizeof(qking_vm_exec_state_t)));
         if (!exec_state_p) {
             break;
         }
+        memset(exec_state_p, 0, sizeof(qking_vm_exec_state_t));
         //init
-        qking_context_t *context_p = qking_create_context(512 * 1024, qking_context_alloc, NULL);
+        if (heap_size==0){
+          //default is 512k
+          heap_size = 512 * 1024;
+        } else if (heap_size<1024){
+          //min is 1k
+          heap_size = 1024;
+        } else if (heap_size > 1024*1024 *8){
+          //max is 8mb
+          heap_size = 1024*1024 *8;
+        }
+        qking_context_t *context_p = qking_create_context(heap_size, qking_context_alloc, NULL);
         if (!context_p) {
             break;
         }
@@ -85,9 +96,9 @@ qking_vm_exec_state_t *qking_create_vm_exec_state(qking_external_context_t exter
         exec_state_p->context_p = context_p;
         exec_state_p->external_context_p = external_context;
         exec_state_p->compiled_func_state = NULL;
-        
+
     } while (0);
-    
+
     return exec_state_p;
 }
 
@@ -96,6 +107,17 @@ void qking_free_vm_exec_state(qking_vm_exec_state_t *exec_state_p) {
   QKING_CONTEXT(func_state_p) = exec_state_p->compiled_func_state;
   qking_cleanup();
 #endif
+  if (exec_state_p->symbols_pp && exec_state_p->symbols_size > 0) {
+    for (uint32_t i = 0; i < exec_state_p->symbols_size; i++) {
+      if (exec_state_p->symbols_pp[i]) {
+        free(exec_state_p->symbols_pp[i]);
+      }
+    }
+    free(exec_state_p->symbols_pp);
+  }
+  if (exec_state_p->exception_p) {
+    free(exec_state_p->exception_p);
+  }
   free(exec_state_p->context_p);
   free(exec_state_p);
   qking_port_default_set_current_context(NULL);
@@ -126,11 +148,12 @@ bool qking_vm_exec_state_execute(qking_vm_exec_state_t *exec_state_p, ecma_value
   }
   bool is_err = ecma_is_value_error_reference(ret_value);
   if (is_err) {
-    qking_value_t err_ret_value = qking_get_value_from_error(ret_value, true);
+    qking_value_t err_ret_value = qking_get_value_from_error(ret_value, false);
     QKING_TO_LOG_STR_START(err_str, err_ret_value);
     LOGE("Unhandled Expception %s\n", err_str);
     if (err_value) {
-      *err_value = qking_create_string_sz((const qking_char_t *)err_str, (qking_size_t) strlen(err_str));
+//      *err_value = qking_create_string_sz((const qking_char_t *)err_str, (qking_size_t) strlen(err_str));
+      *err_value = ret_value;
     }
     QKING_TO_LOG_STR_FINISH(err_str);
     qking_release_value(err_ret_value);

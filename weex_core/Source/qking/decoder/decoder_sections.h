@@ -23,16 +23,19 @@
 #include "decoder/exec_state_decode.h"
 #include "stdbool.h"
 
-bool qking_decoder_section_decode_header(exec_state_decoder_t* decoder,
+bool qking_decoder_section_decode_header(exec_state_decoder_t *decoder,
                                          uint32_t length);
 
-bool qking_decoder_section_decode_string(exec_state_decoder_t* decoder,
+bool qking_decoder_section_decode_string(exec_state_decoder_t *decoder,
                                          uint32_t length);
 
-bool qking_decoder_section_decode_function(exec_state_decoder_t* decoder,
+bool qking_decoder_section_decode_function(exec_state_decoder_t *decoder,
                                            uint32_t length);
 
-bool qking_decoder_section_decode_value_ref(exec_state_decoder_t* decoder,
+bool qking_decoder_section_decode_value_ref(exec_state_decoder_t *decoder,
                                             uint32_t length);
+
+bool qking_decoder_section_decode_symbols(exec_state_decoder_t *decoder,
+                                          uint32_t length);
 
 #endif  // QKING_ROOT_DECODER_SECTIONS_H

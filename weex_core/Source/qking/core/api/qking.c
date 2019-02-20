@@ -20,6 +20,7 @@
 #include "core/handler/handler.h"
 #include "qking.h"
 #include "base/qking_common_logger.h"
+#include "base/qking_common_binary.h"
 #include "core/include/qking_core.h"
 #include "core/jcontext/jcontext.h"
 #include "core/lit/lit_strings.h"
@@ -32,12 +33,21 @@
 #endif
 
 qking_executor_t qking_create_executor(qking_external_context_t context) {
-  qking_executor_t executor = qking_create_vm_exec_state(context);
+  qking_executor_t executor = qking_create_vm_exec_state(context,0);
   if (executor) {
     qking_set_current_executor(executor);
   }
   return executor;
 }
+
+qking_executor_t qking_create_executor_size(qking_external_context_t context, uint32_t heap_size){
+  qking_executor_t executor = qking_create_vm_exec_state(context, heap_size);
+  if (executor) {
+    qking_set_current_executor(executor);
+  }
+  return executor;
+}
+
 
 void qking_set_current_executor(qking_executor_t executor) {
   qking_vm_exec_state_make_current((qking_vm_exec_state_t *)executor);
@@ -58,11 +68,34 @@ bool qking_set_assembly_code(qking_executor_t executor, uint8_t *code,
   bool succ = qking_decoding_binary(ptr, &err_msg);
   if (!succ) {
     QKING_ASSERT(err_msg);
-    *error_value = qking_create_string((const qking_char_t *) err_msg);
+    *error_value = qking_create_error(QKING_ERROR_COMMON,err_msg);
   }
   qking_free_decoder(ptr);
   return succ;
 }
+
+bool qking_decode_binary_info(uint8_t *code, size_t size,qking_info_section_struct* info){
+  if (!code){
+    return false;
+  }
+
+  uint8_t seg0 = *((uint8_t*)(code+0));
+  uint8_t seg1 = *((uint8_t*)(code+1));
+  uint8_t seg2 = *((uint8_t*)(code+2));
+  uint8_t seg3 = *((uint8_t*)(code+3));
+  uint32_t magic_code = *((uint32_t*)(code+3));
+  if (seg0 == 0x04 && seg1 == 0x00 && seg2 == 0x00 && seg3 == 0x00 && magic_code == EXEC_BINARY_MAGIC_NUMBER
+    && size >= sizeof(qking_info_section_struct)){
+    //has info section
+    if (info){
+      *info = *((qking_info_section_struct*)code);
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
 
 #ifdef CONFIG_DISABLE_COMPILER_BUILTIN
 bool qking_set_compile_code(qking_executor_t executor, const char *pstr,
@@ -104,7 +137,7 @@ bool qking_external_variable_register_global(const char *name_p,
 
 qking_external_context_t qking_get_current_external_context(void) {
   struct qking_context_t *context = qking_port_get_current_context();
-  return context?qking_port_get_current_context()->external_context_p:NULL;
+  return context ? qking_port_get_current_context()->external_context_p : NULL;
 }
 
 qking_executor_t qking_get_current_executor(void) {
@@ -113,7 +146,7 @@ qking_executor_t qking_get_current_executor(void) {
 }
 
 qking_external_context_t qking_get_external_context_from_executor(qking_executor_t executor) {
-  return ((qking_vm_exec_state_t*)executor)->external_context_p;
+  return ((qking_vm_exec_state_t *)executor)->external_context_p;
 }
 
 qking_value_t qking_create_object_native_pointer(

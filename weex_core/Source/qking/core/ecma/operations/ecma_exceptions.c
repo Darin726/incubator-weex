@@ -26,6 +26,7 @@
 #include "ecma_objects.h"
 #include "jcontext.h"
 #include "jrt.h"
+#include "core/port/qking_port_default.h"
 
 #ifdef QKING_ENABLE_LINE_INFO
 #include "vm.h"
@@ -79,6 +80,7 @@ const ecma_error_mapping_t ecma_error_mappings[] =
 ecma_object_t *
 ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error type */
 {
+  qking_port_default_debugger();
 #ifndef CONFIG_DISABLE_ERROR_BUILTINS
   ecma_builtin_id_t prototype_id = ECMA_BUILTIN_ID__COUNT;
 

@@ -59,9 +59,20 @@ bool qking_port_default_is_abort_on_fail (void)
 static qking_port_default_fatal_t fatal_error_handler = NULL;
 
 void qking_register_handler_fatal_error(qking_port_default_fatal_t fatal_handler) {
-    fatal_error_handler = fatal_handler;
+  fatal_error_handler = fatal_handler;
 }
 
+static qking_port_default_fatal_t fatal_error_debugger_handler = NULL;
+
+void qking_register_handler_debugger_fatal_error(qking_port_default_fatal_t fatal_handler) {
+  fatal_error_debugger_handler = fatal_handler;
+}
+
+void qking_port_default_debugger() {
+  if (fatal_error_debugger_handler) {
+    fatal_error_debugger_handler(ERR_EXCEPTION);
+  }
+}
 /**
  * Default implementation of qking_port_fatal. Calls 'abort' if exit code is
  * non-zero and "abort-on-fail" behaviour is enabled, 'exit' otherwise.

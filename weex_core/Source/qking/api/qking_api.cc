@@ -3,6 +3,7 @@
 #include "base/qking_common_error.h"
 #include "base/qking_common_logger.h"
 #include "base/qking_string_utils.h"
+#include "core/vm/vm_exec_state.h"
 #include "rax/rax_builtin_env.h"
 #include "rax/vdom/rax_element_factory.h"
 
@@ -109,6 +110,73 @@ static void qking_handler_fatal_error(int code) {
 }
 #endif
 
+static void qking_handler_print_debugger_fatal_error(int code) {
+  std::string error = "\n[exception][pc]:=>";
+  struct qking_context_t *context_p = qking_port_get_current_context();
+  qking_vm_exec_state_t *executor_p =
+      (qking_vm_exec_state_t *)context_p->executor_p;
+  vm_frame_ctx_t *frame_ctx_p = context_p->vm_top_context_p;
+  while (frame_ctx_p) {
+    const ecma_compiled_code_t *bytecode_header_p =
+        frame_ctx_p->bytecode_header_p;
+    size_t size = ((size_t)bytecode_header_p->size) << JMEM_ALIGNMENT_LOG;
+    if (size !=
+        QKING_ALIGNUP(sizeof(ecma_compiled_function_state_t), JMEM_ALIGNMENT)) {
+      frame_ctx_p = frame_ctx_p->prev_context_p;
+      continue;
+    }
+    break;
+  }
+  if (executor_p->symbols_pp && executor_p->symbols_size > 0 &&
+      frame_ctx_p->pc_current_idx < executor_p->symbols_size) {
+    error += executor_p->symbols_pp[frame_ctx_p->pc_current_idx];
+  } else {
+    error += qking::utils::to_string(frame_ctx_p->pc_current_idx);
+  }
+  error += "\n";
+  bool is_first_stack = true;
+
+  frame_ctx_p = context_p->vm_top_context_p;
+  while (frame_ctx_p) {
+    const ecma_compiled_code_t *bytecode_header_p =
+        frame_ctx_p->bytecode_header_p;
+    size_t size = ((size_t)bytecode_header_p->size) << JMEM_ALIGNMENT_LOG;
+    if (size !=
+        QKING_ALIGNUP(sizeof(ecma_compiled_function_state_t), JMEM_ALIGNMENT)) {
+      frame_ctx_p = frame_ctx_p->prev_context_p;
+      continue;
+    }
+    const ecma_compiled_function_state_t *func_state_p =
+        (ecma_compiled_function_state_t *)bytecode_header_p;
+    if (executor_p->symbols_pp && executor_p->symbols_size > 0 &&
+        func_state_p->func_symbol_idx < executor_p->symbols_size) {
+      if (is_first_stack) {
+        error += "[stack]:=>";
+        is_first_stack = false;
+      }
+      error += executor_p->symbols_pp[func_state_p->func_symbol_idx];
+      error += "\n";
+    } else if (func_state_p->func_symbol_idx >= 0) {
+      if (is_first_stack) {
+        error += "[stack]:=>";
+        is_first_stack = false;
+      }
+      error += qking::utils::to_string(func_state_p->func_symbol_idx);
+      error += "\n";
+    }
+    frame_ctx_p = frame_ctx_p->prev_context_p;
+  }
+  LOGD("%s", error.c_str());
+  if (executor_p->exception_p) {
+    free(executor_p->exception_p);
+    executor_p->exception_p = NULL;
+  }
+  executor_p->exception_p = (char *)malloc(error.length() + 1);
+  if (executor_p->exception_p) {
+    memcpy(executor_p->exception_p, error.c_str(), error.length() + 1);
+  }
+}
+
 std::string string_from_qking_string_value(const qking_value_t string_var) {
   std::string str;
   if (qking_value_is_string(string_var)) {
@@ -162,7 +230,8 @@ std::string string_from_qking_error(const qking_value_t err) {
     qking_release_value(str_val);
     return "err can' convert to string";
   }
-  const std::string &err_msg_str = string_from_qking_string_value(str_val);
+  std::string err_msg_str = string_from_qking_string_value(str_val);
+  qking_api_get_last_exception(err_msg_str);
   qking_release_value(str_val);
   return err_msg_str;
 }
@@ -188,6 +257,23 @@ std::string string_from_qking_get_property_by_index(const qking_value_t obj_val,
   return str;
 }
 
+bool qking_api_get_last_exception(std::string &exception) {
+  bool success = false;
+  do {
+    struct qking_context_t *context_p = qking_port_get_current_context();
+    qking_vm_exec_state_t *executor_p =
+        (qking_vm_exec_state_t *)context_p->executor_p;
+    if (!executor_p->exception_p) {
+      break;
+    }
+    exception += executor_p->exception_p;
+    success = true;
+
+  } while (0);
+
+  return success;
+}
+
 bool qking_api_execute_code(qking_executor_t executor, std::string &error) {
   qking_value_t error_var = qking_create_undefined();
   bool success = false;
@@ -199,13 +285,20 @@ bool qking_api_execute_code(qking_executor_t executor, std::string &error) {
     LOGE("[exception]:=>qking execute code error: %s", e.what());
     return success;
   }
-  error = string_from_qking_string_value(error_var);
+  if (!success) {
+    error = string_from_qking_error(error_var);
+  }
   qking_release_value(error_var);
   return success;
 }
 
 bool qking_api_set_assembly_code(qking_executor_t executor, uint8_t *code,
                                  size_t size, std::string &error) {
+  if (!code) {
+    error = "qking set assembly code error: null *code";
+    return false;
+  }
+
   qking_value_t error_var = qking_create_undefined();
   bool success = false;
   try {
@@ -217,7 +310,7 @@ bool qking_api_set_assembly_code(qking_executor_t executor, uint8_t *code,
     return success;
   }
   if (!success) {
-    error = string_from_qking_string_value(error_var);
+    error = string_from_qking_to_string(error_var);
     qking_release_value(error_var);
   }
   return success;
@@ -402,8 +495,11 @@ static qking_value_t qking_api_do_nothing(const qking_value_t function_obj,
 #ifdef QKING_ENABLE_EXTERNAL_WEEX_ENV
 
 void qking_api_register_weex_environment(void) {
+  qking_register_handler_debugger_fatal_error(
+      qking_handler_print_debugger_fatal_error);
 #ifdef QKING_NDEBUG
   qking_register_handler_fatal_error(qking_handler_fatal_error);
+#else
 #endif
   const auto &page_id = rax::rax_get_current_page_name();
   RAX_NS::RaxElementFactory::CreateFactory(page_id);
@@ -422,6 +518,15 @@ void qking_api_register_weex_environment(void) {
                                          qking_api_do_nothing);
 }
 
+#endif
+
+#ifdef QKING_ENABLE_EXTERNAL_UNIT_TEST_ENV
+void qking_api_register_test_environment(void) {
+  qking_register_handler_debugger_fatal_error(
+      qking_handler_print_debugger_fatal_error);
+
+  qking_external_handler_register_global("__print", qking_api_print);
+}
 #endif
 
 void qking_api_register_variable(const std::string &init_data_str) {

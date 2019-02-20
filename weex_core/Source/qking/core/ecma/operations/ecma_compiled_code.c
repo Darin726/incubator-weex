@@ -57,6 +57,8 @@ ecma_compiled_function_state_t *ecma_create_compiled_function_state() {
     bytecode_p->refs = ECMA_BYTECODE_REF_ONE;
     bytecode_p->status_flags = ECMA_CODE_FLAGS_FUNCTION;
     func_state_p->constants = ECMA_VALUE_UNDEFINED;
+    func_state_p->func_symbol_idx = -1;
+    func_state_p->pp_symbols_idx = NULL;
 #ifdef QKING_ENABLE_GC_DEBUG
     printf("[gc][info][constants][%i]=>[init]\n", func_state_p->constants);
 #endif
@@ -144,6 +146,10 @@ void ecma_finalize_compiled_function_state(ecma_compiled_function_state_t *funct
         jmem_heap_free_block(function_state_p->pc, instructions_size);
         function_state_p->pc = NULL;
         function_state_p->pcc = 0;
+    }
+    if (function_state_p->pp_symbols_idx) {
+        jmem_system_free(function_state_p->pp_symbols_idx);
+        function_state_p->pp_symbols_idx = NULL;
     }
     if (qking_value_is_array(function_state_p->constants)) {
         qking_release_value(function_state_p->constants);

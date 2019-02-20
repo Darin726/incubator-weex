@@ -639,6 +639,16 @@ bool qking_decoder_section_decode_function(exec_state_decoder_t *decoder, uint32
           decode_func->func_state->header.status_flags = status_flag;
           break;
         }
+        case kValueFunctionSymbol: {
+          int32_t func_symbol_idx = -1;
+          if (qking_decoder_fstream_read(decoder->stream, &func_symbol_idx, 1, readbytes) != readbytes)
+          {
+            RAISE_ERR_MSG("decoding function symbol error");
+          }
+          QKING_ASSERT(func_symbol_idx >= 0);
+          decode_func->func_state->func_symbol_idx = func_symbol_idx;
+          break;
+        }
         case kValueFunctionInClosure: {
           int32_t *buffer = (int32_t *) jmem_system_malloc(readbytes);
           if (!buffer) {
@@ -693,6 +703,40 @@ bool qking_decoder_section_decode_function(exec_state_decoder_t *decoder, uint32
             jmem_system_free(buffer);
             RAISE_ERR_MSG("decoding read function instructions error");
           }
+          jmem_system_free(buffer);
+          break;
+        }
+        case kValueFunctionInstructionSymbol: {
+          uint8_t *buffer = (uint8_t *) jmem_system_malloc(readbytes);
+          if (!buffer) {
+            RAISE_ERR_MSG("decoding read function symbol low memory error");
+          }
+          if (qking_decoder_fstream_read(decoder->stream, buffer, 1, readbytes) != readbytes) {
+            jmem_system_free(buffer);
+            RAISE_ERR_MSG("decoding read function instructions symbol error");
+          }
+          QKING_ASSERT(readbytes / sizeof(int32_t) == decode_func->func_state->pcc);
+          decode_func->func_state->pp_symbols_idx = jmem_system_malloc(readbytes);
+          if (!decode_func->func_state->pp_symbols_idx) {
+            jmem_system_free(buffer);
+            RAISE_ERR_MSG("decoding read function instructions symbol error");
+          }
+          uint8_t *read_buffer = buffer;
+          uint32_t remain = readbytes;
+          for (int k = 0; k < decode_func->func_state->pcc; k++) {
+            int32_t symbols_idx = -1;
+            uint32_t bytes_read = 0;
+            uint32_t bytes_decoding = sizeof(int32_t);
+            if (!(bytes_read = DecodeSection_decodingFromBuffer(read_buffer, remain, (uint8_t *) &symbols_idx, &bytes_decoding))) {
+                RAISE_ERR_MSG("value bytes_read err");
+            }
+            read_buffer += bytes_read;
+            remain -= bytes_read;
+            QKING_ASSERT(symbols_idx >= 0);
+            LOGD("decoding function instructions symbol index:%i", symbols_idx);
+            decode_func->func_state->pp_symbols_idx[k] = symbols_idx;
+          }
+          QKING_ASSERT(remain == 0);
           jmem_system_free(buffer);
           break;
         }
@@ -788,6 +832,50 @@ bool qking_decoder_section_decode_function(exec_state_decoder_t *decoder, uint32
   }
   decoder->exec_state->compiled_func_state = decoder->func_state_p_array[0].func_state;
   COMMON_RETURN();
+}
+
+bool qking_decoder_section_decode_symbols(exec_state_decoder_t *decoder, uint32_t length) {
+    COMMON_START();
+    //symbols array
+    {
+        uint16_t target = 0;
+        uint32_t symbols_count = 0;
+        uint32_t size = sizeof(uint32_t);
+        uint32_t readbytes = qking_decoder_fstream_read_target(decoder->stream, &target, (uint8_t *) &symbols_count, &size);
+        if (readbytes != size || target != kValueStringSize) {
+            RAISE_ERR_MSG("decoding symbols string count error");
+        }
+        qking_decoder_create_symbols_table(decoder, symbols_count);
+        int index = 0;
+        for (index = 0; index < symbols_count; index++) {
+            uint16_t vindex = 0;
+            uint32_t varlen = qking_decoder_fstream_read_target(decoder->stream, &vindex, NULL, NULL);
+            if (vindex != kValueStringPayload) {
+                RAISE_ERR_MSG("vindex != symbols kValueStringPayload");
+            }
+            if (varlen == 0) {
+                decoder->symbols_pp[index] = NULL;
+                continue;
+            }
+            
+            char *pstr = (char *) malloc(varlen + 1);
+            if (!pstr) {
+                RAISE_ERR_MSG("decode symbol string malloc err");
+            }
+            memset(pstr, 0, varlen + 1);
+            if (qking_decoder_fstream_read(decoder->stream, pstr, 1, varlen) != varlen) {
+                RAISE_ERR_MSG("decoding symbol string content error");
+            }
+            decoder->symbols_pp[index] = pstr;
+            LOGD("decoding symbol string: %s", pstr);
+        }
+        if (index != symbols_count) {
+            RAISE_ERR_MSG("decoding symbol string count error");
+        }
+        decoder->exec_state->symbols_pp = decoder->symbols_pp;
+        decoder->exec_state->symbols_size = (uint32_t)decoder->symbols_size;
+    }
+    COMMON_RETURN();
 }
 
 bool qking_decoder_section_decode_value_ref(exec_state_decoder_t *decoder, uint32_t length) {

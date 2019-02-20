@@ -19,8 +19,8 @@
 #ifndef VM_H
 #define VM_H
 
-#include "ecma_globals.h"
-#include "jrt.h"
+#include "core/ecma/base/ecma_globals.h"
+#include "core/jrt/jrt.h"
 #include "vm_defines.h"
 
 #ifdef __cplusplus
