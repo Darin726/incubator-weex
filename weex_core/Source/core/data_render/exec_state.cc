@@ -52,10 +52,36 @@ FuncClosure::FuncClosure(ValueRef *ref) {
     ref_ = ref;
 }
 
+void FuncStack::reset() {
+    size_t size = FUNC_STACK_SIZE  * sizeof(Value);
+    memset(base(), 0, size);
+}
 void ExecStack::reset() {
-    size_t size = (VM_EXEC_STACK_SIZE - (top_ - base()) - 1) * sizeof(Value);
-    //LOGD("reset:%i=>\n", (int)(top_ - base()));
-    memset(top_, 0, size);
+    for (size_t i=current_index_+1; i<stacks_.size(); i++) {
+        stacks_[i]->reset();
+    }
+}
+
+ExecStack::ExecStack() : stacks_(EXEC_STACK_SIZE), current_index_(0) {
+    for (int i=0; i<stacks_.capacity(); i++) {
+        stacks_[i] = new FuncStack();
+    }
+}
+
+ExecStack::~ExecStack() {
+    for (auto it : stacks_) {
+        delete it;
+    }
+}
+
+void ExecStack::set_current_index(size_t index) {
+    if (index >= stacks_.size()) {
+        size_t size = stacks_.size();
+        for (int i = 0; i<index - size + 1; i++) {
+            stacks_.push_back(new FuncStack());
+        }
+    }
+    current_index_ = index;
 }
 
 ExecState::ExecState(VM *vm)
@@ -63,7 +89,7 @@ ExecState::ExecState(VM *vm)
       frames_(),
       refs_(),
       global_(new Variables),
-      stack_(new ExecStack),
+      exec_stack_(new ExecStack),
       func_state_(nullptr),
       string_table_(new StringTable),
       render_context_(new VNodeRenderContext),
@@ -136,10 +162,11 @@ void ExecState::Execute(std::string& err) {
   chunk.type = Value::Type::FUNC;
   chunk.f = func_state_.get();
   // reset stack top pointer when main call
-  *stack_->top() = stack_->base();
-  *stack_->base() = chunk;
+  exec_stack_->set_current_index(0);
+  FuncStack* stack = exec_stack_->current_func_stack();
+  *stack->base() = chunk;
   try {
-      CallFunction(stack_->base(), 0, nullptr);
+      CallFunction(stack->base(), 0, nullptr);
   } catch (std::exception &e) {
       auto error = static_cast<Error *>(&e);
       if (error) {
@@ -155,8 +182,9 @@ const Value ExecState::Call(const std::string& func_name, const std::vector<Valu
     do {
         int index = global()->IndexOf(func_name);
         long caller = -1;
+        FuncStack* stack = exec_stack_->current_func_stack();
         if (index >= 0) {
-            **stack_->top() = *(global()->Find(index));
+            **stack->top() = *(global()->Find(index));
         }
         else {
             auto iter = global_variables_.find(func_name);
@@ -167,12 +195,12 @@ const Value ExecState::Call(const std::string& func_name, const std::vector<Valu
             if (caller < 0) {
                 break;
             }
-            **stack_->top() = *(stack_->base() + caller);
+            **stack->top() = *(stack->base() + caller);
         }
         for (int i = 0; i < args.size(); ++i) {
-            *(*stack_->top() + i + 1) = args[i];
+            *(*stack->top() + i + 1) = args[i];
         }
-        CallFunction(*stack_->top(), args.size(), &ret);
+        CallFunction(*stack->top(), args.size(), &ret);
 
     } while (0);
     
@@ -182,14 +210,15 @@ const Value ExecState::Call(const std::string& func_name, const std::vector<Valu
 const Value ExecState::Call(FuncInstance *func, const std::vector<Value>& args) {
     Value ret;
     do {
+        FuncStack* stack = exec_stack_->current_func_stack();
         Value functor;
         SetGCFuncValue(&functor, reinterpret_cast<GCObject *>(func));
-        **stack_->top() = functor;
+        **stack->top() = functor;
         int index = 0;
         for (int i = 0; i < args.size(); i++) {
-            *(*stack_->top() + i + 1 + index) = args[i];
+            *(*stack->top() + i + 1 + index) = args[i];
         }
-        CallFunction(*stack_->top(), args.size(), &ret);
+        CallFunction(*stack->top(), args.size(), &ret);
         
     } while (0);
     
@@ -199,13 +228,14 @@ const Value ExecState::Call(FuncInstance *func, const std::vector<Value>& args) 
 const Value ExecState::Call(FuncState *func_state, const std::vector<Value>& args) {
     Value ret;
     do {
+        FuncStack* stack = exec_stack_->current_func_stack();
         Value func(func_state);
-        **stack_->top() = func;
+        **stack->top() = func;
         int index = 0;
         for (int i = 0; i < args.size(); i++) {
-            *(*stack_->top() + i + 1 + index) = args[i];
+            *(*stack->top() + i + 1 + index) = args[i];
         }
-        CallFunction(*stack_->top(), args.size(), &ret);
+        CallFunction(*stack->top(), args.size(), &ret);
         
     } while (0);
     
@@ -215,9 +245,10 @@ const Value ExecState::Call(FuncState *func_state, const std::vector<Value>& arg
 const Value ExecState::Call(Value *func, const std::vector<Value>& args) {
     Value ret;
     do {
+        FuncStack* stack = exec_stack_->current_func_stack();
         // 首先检查函数是否属于堆栈函数
-        long reg = func - stack_->base();
-        if (reg >= VM_EXEC_STACK_SIZE) {
+        long reg = func - stack->base();
+        if (reg >= FUNC_STACK_SIZE) {
             throw VMExecError("call function out of stack");
             break;
         }
@@ -233,6 +264,7 @@ const Value ExecState::Call(Value *func, const std::vector<Value>& args) {
     
 void ExecState::resetArguments(Value *func, size_t argc) {
     do {
+        FuncStack* stack = exec_stack_->current_func_stack();
         auto iter = global_variables_.find(JS_GLOBAL_ARGUMENTS);
         if (iter == global_variables_.end()) {
             break;
@@ -241,7 +273,7 @@ void ExecState::resetArguments(Value *func, size_t argc) {
         if (caller < 0) {
             break;
         }
-        Value *arguments = stack_->base() + caller;
+        Value *arguments = stack->base() + caller;
         if (!IsArray(arguments)) {
             break;
         }
@@ -265,8 +297,10 @@ void ExecState::Register(const std::string& name, Value value) {
 }
 
 void ExecState::CallFunction(Value *func, size_t argc, Value *ret) {
+    size_t current_index = exec_stack_->current_index();
     if (func->type == Value::Type::CFUNC) {
-        *stack_->top() = func + argc;
+        FuncStack* stack = exec_stack_->current_func_stack();
+        *stack->top() = func + argc;
         Frame frame;
         frame.reg = func;
         frames_.push_back(frame);
@@ -275,8 +309,8 @@ void ExecState::CallFunction(Value *func, size_t argc, Value *ret) {
             *ret = result;
         }
         // back to the top of params for clear register
-        *stack_->top() = func + 1;
-        stack_->reset();
+        exec_stack_->set_current_index(current_index);
+        exec_stack_->reset();
         frames_.pop_back();
     }
     else {
@@ -285,7 +319,9 @@ void ExecState::CallFunction(Value *func, size_t argc, Value *ret) {
             size_t size = (func_state->argc() - argc) * sizeof(Value);
             memset(func + argc + 1, 0, size);
         }
-        *stack_->top() = func + argc;
+        exec_stack_->set_current_index(current_index + 1);
+        FuncStack* stack = exec_stack_->current_func_stack();
+        *stack->top() = func + argc;
         Frame frame;
         frame.func = func_state;
         frame.reg = func;
@@ -295,8 +331,8 @@ void ExecState::CallFunction(Value *func, size_t argc, Value *ret) {
         resetArguments(func, argc);
         vm_->RunFrame(this, frame, ret);
         // back to the top of params for clear register
-        *stack_->top() = func + 1;
-        stack_->reset();
+        exec_stack_->set_current_index(current_index);
+        exec_stack_->reset();
         frames_.pop_back();
     }
 }
@@ -330,7 +366,8 @@ ValueRef *ExecState::FindRef(int index) {
 }
 
 size_t ExecState::GetArgumentCount() {
-  return *stack_->top() - frames_.back().reg;
+  FuncStack* stack = exec_stack_->current_func_stack();
+  return *stack->top() - frames_.back().reg;
 }
 
 Value* ExecState::GetArgument(int index) {

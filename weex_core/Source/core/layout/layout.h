@@ -734,6 +734,15 @@ namespace WeexCore {
       return mChildList[index];
     }
 
+    inline int32_t getChildIndex(WXCoreLayoutNode* const child){
+      const auto &it = std::find(mChildList.begin(), mChildList.end(), child);
+      if (it == mChildList.end()) {
+        return -1;
+      } else {
+        return static_cast<int32_t>(std::distance(mChildList.begin(), it));
+      }
+    }
+
     inline WXCoreLayoutNode *getParent() const {
       return mParent;
     }
@@ -997,7 +1006,7 @@ namespace WeexCore {
     /** ================================ CSS direction For RTL =================================== **/
       
     void determineChildLayoutDirection(const WXCoreDirection direction);
-      
+
     WXCoreDirection getLayoutDirectionFromPathNode();
       
     /** ================================ flex-style =================================== **/

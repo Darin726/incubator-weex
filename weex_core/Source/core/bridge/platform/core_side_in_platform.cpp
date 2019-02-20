@@ -453,10 +453,20 @@ int CoreSideInPlatform::CreateInstance(const char *instanceId, const char *func,
 
       return true;
     } else if (strcmp(render_strategy, "DATA_RENDER_BINARY") == 0) {
-      auto node_manager =
-          weex::core::data_render::VNodeRenderManager::GetInstance();
-      node_manager->CreatePage(script, script_length, instanceId,
-                               render_strategy, initData, exec_js);
+        std::string error;
+        std::string env_str;
+        auto opts_json_value = json11::Json::parse(opts, error);
+        if (error.empty()) {
+            auto env_obj = opts_json_value["env"];
+            env_str = "";
+            if (env_obj.is_object()) {
+                env_str = env_obj.dump();
+            }
+        }
+        auto node_manager =
+        weex::core::data_render::VNodeRenderManager::GetInstance();
+        node_manager->CreatePage(script, static_cast<size_t>(script_length), instanceId,
+                                 render_strategy, env_str, initData, exec_js);
 
       return true;
     }
@@ -479,9 +489,7 @@ std::unique_ptr<WeexJSResult> CoreSideInPlatform::ExecJSOnInstance(const char *i
 int CoreSideInPlatform::DestroyInstance(const char *instanceId) {
   auto node_manager =
       weex::core::data_render::VNodeRenderManager::GetInstance();
-  if (node_manager->ClosePage(instanceId)) {
-    return true;
-  }
+  node_manager->ClosePage(instanceId);
   return WeexCoreManager::Instance()
       ->script_bridge()
       ->script_side()

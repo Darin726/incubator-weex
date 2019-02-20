@@ -18,8 +18,6 @@
  */
 package com.taobao.weex.bridge;
 
-import android.util.Log;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -35,10 +33,10 @@ import com.taobao.weex.dom.CSSShorthand;
 import com.taobao.weex.layout.ContentBoxMeasurement;
 import com.taobao.weex.performance.WXInstanceApm;
 import com.taobao.weex.utils.WXExceptionUtils;
+import com.taobao.weex.utils.WXJsonUtils;
 import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.WXUtils;
 import com.taobao.weex.utils.WXWsonJSONSwitch;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -70,6 +68,8 @@ public class WXBridge implements IWXBridge {
   public native String nativeExecJSOnInstance(String instanceId, String script, int type);
 
   public native void nativeFireEventOnDataRenderNode(String instanceId, String ref, String type, String data, String domChanges);
+
+  public native void nativeInvokeCallbackOnDataRender(String instanceId, String callbackId, String data, boolean keepAlive);
 
   public native void nativeRegisterModuleOnDataRenderNode( String data);
 
@@ -296,7 +296,23 @@ public class WXBridge implements IWXBridge {
             WXUtils.getFixUnixTime()-start
         );
       }
-      return WXWsonJSONSwitch.toWsonOrJsonWXJSObject(object);
+      if (instance!=null && (instance.getRenderStrategy()== WXRenderStrategy.DATA_RENDER
+          || instance.getRenderStrategy()== WXRenderStrategy.DATA_RENDER_BINARY)){
+        try {
+          if(object == null){
+            return new WXJSObject(null);
+          }
+          if(object.getClass() == WXJSObject.class){
+            return (WXJSObject) object;
+          }
+          return new WXJSObject(WXJSObject.JSON, WXJsonUtils.fromObjectToJSONString(object));
+        } catch (Exception e) {
+          // For wson use in data render mode
+          return WXWsonJSONSwitch.toWsonOrJsonWXJSObject(object);
+        }
+      } else {
+        return WXWsonJSONSwitch.toWsonOrJsonWXJSObject(object);
+      }
     }catch (Exception e){
       WXLogUtils.e(TAG,  e);
       return new WXJSObject(null);
@@ -686,7 +702,6 @@ public class WXBridge implements IWXBridge {
         params.put(IWXUserTrackAdapter.MONITOR_ERROR_CODE, statusCode);
         params.put(IWXUserTrackAdapter.MONITOR_ARG, "InitFrameworkNativeError");
         params.put(IWXUserTrackAdapter.MONITOR_ERROR_MSG, errorMsg);
-        Log.e("Dyy", "reportNativeInitStatus is running and errorCode is " + statusCode + " And errorMsg is " + errorMsg);
         userTrackAdapter.commit(null, null, IWXUserTrackAdapter.INIT_FRAMEWORK, null, params);
       }
 
@@ -712,6 +727,10 @@ public class WXBridge implements IWXBridge {
 
   public void fireEventOnDataRenderNode(String instanceId, String ref, String type, String data, String domChanges) {
     nativeFireEventOnDataRenderNode(instanceId,ref,type,data, domChanges);
+  }
+
+  public void invokeCallbackOnDataRender(String instanceId, String callbackId, String data, boolean keepAlive) {
+    nativeInvokeCallbackOnDataRender(instanceId,callbackId,data, keepAlive);
   }
 
   public void registerModuleOnDataRenderNode(String data) {

@@ -186,6 +186,7 @@ void CodeGenerator::Visit(ChunkStatement* stms, void* data) {
 }
 
 void CodeGenerator::Visit(CallExpression *stms, void *data) {
+    RegisterScope scope(block_);
     FuncState *func_state = func_->func_state();
     long ret = data == nullptr ? block_->NextRegisterId() : *static_cast<long *>(data);
     long caller = -1;
@@ -757,6 +758,7 @@ void CodeGenerator::Visit(JSXNodeExpression *node, void *data) {
 }
 
 void CodeGenerator::Visit(BinaryExpression *node, void *data) {
+    RegisterScope scope(block_);
     long left = -1;
     long ret = data == nullptr ? block_->NextRegisterId() : *static_cast<long *>(data);
     if (node->lhs() && (node->lhs()->IsDeclaration() || node->lhs()->IsDeclarationList())) {
@@ -765,7 +767,6 @@ void CodeGenerator::Visit(BinaryExpression *node, void *data) {
     }
     BinaryOperation opeartion = node->op();
     FuncState *func_state = func_->func_state();
-    RegisterScope scope(block_);
     if (left < 0) {
         left = block_->NextRegisterId();
         if (node->lhs().get() != NULL) {
@@ -1084,6 +1085,7 @@ void CodeGenerator::Visit(UndefinedConstant *node, void *data) {
 }
 
 void CodeGenerator::Visit(ObjectConstant *node, void *data) {
+    RegisterScope scope(block_);
     long ret = data == nullptr ? -1 : *static_cast<long *>(data);
     FuncState *func_state = func_->func_state();
     if (ret >= 0) {
@@ -1140,6 +1142,7 @@ void CodeGenerator::Visit(ObjectConstant *node, void *data) {
 }
 // TODO: this is not correct.
 void CodeGenerator::Visit(ArrayConstant *node, void *data) {
+    RegisterScope scope(block_);
     long reg = data == nullptr ? -1 : *static_cast<long*>(data);
     FuncState *func_state = func_->func_state();
     // new table
@@ -1329,6 +1332,7 @@ void CodeGenerator::Visit(PostfixExpression *node, void *data) {
 }
 
 void CodeGenerator::Visit(ReturnStatement *node, void *data) {
+    RegisterScope scope(block_);
     FuncState *func_state = func_->func_state();
     if (node->expr() == nullptr) {
         func_state->AddInstruction(CREATE_Ax(OP_RETURN0, 0));
@@ -1341,6 +1345,7 @@ void CodeGenerator::Visit(ReturnStatement *node, void *data) {
 }
 
 void CodeGenerator::Visit(SwitchStatement* node, void* data) {
+    RegisterScope scope(block_);
     BlockScope for_scope(this);
     block_->set_is_switch(true);
 

@@ -476,13 +476,19 @@ void WXPerformBlockSyncOnBridgeThread(void (^block) (void))
     NSArray *args = nil;
     if (keepAlive) {
         args = @[[funcId copy], params? [params copy]:@"\"{}\"", @true];
-    }else {
+    } else {
         args = @[[funcId copy], params? [params copy]:@"\"{}\""];
     }
     WXSDKInstance *instance = [WXSDKManager instanceForID:instanceId];
-
-    WXCallJSMethod *method = [[WXCallJSMethod alloc] initWithModuleName:@"jsBridge" methodName:@"callback" arguments:args instance:instance];
-    [self callJsMethod:method];
+    if (instance.asmRender) {
+        WXPerformBlockOnComponentThread(^{
+            [WXCoreBridge invokeCallBack:instanceId function:funcId args:params keepAlive:keepAlive];
+        });
+    }
+    else {
+        WXCallJSMethod *method = [[WXCallJSMethod alloc] initWithModuleName:@"jsBridge" methodName:@"callback" arguments:args instance:instance];
+        [self callJsMethod:method];
+    }
 }
 
 - (void)callBack:(NSString *)instanceId funcId:(NSString *)funcId params:(id)params

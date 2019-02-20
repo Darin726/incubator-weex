@@ -596,7 +596,7 @@ inline std::string ToString(const Value *o) {
         case Value::Type::BOOL:
             return weex::base::to_string(o->b);
         case Value::Type::INT:
-            return weex::base::to_string(o->n);
+            return weex::base::to_string(o->i);
         case Value::Type::NUMBER:
             return weex::base::to_string(o->n);
         case Value::Type::STRING:

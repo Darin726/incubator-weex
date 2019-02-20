@@ -26,9 +26,7 @@
 #include "core/data_render/class_factory.h"
 #include "core/data_render/class_array.h"
 #include "core/data_render/class_string.h"
-#include "core/data_render/class_object.h"
 #include "core/data_render/common_error.h"
-#include "core/data_render/js_common_function.h"
 #include "core/data_render/vnode/vcomponent.h"
 #include "core/data_render/vnode/vnode_render_manager.h"
 #include "core/data_render/vnode/vcomponent_lifecycle_listener.h"
@@ -121,85 +119,7 @@ static Value Slice(ExecState *exec_state) {
     ArrayCopyFrom(*array, new_value, v_start, v_end);
     return new_value;
 }
-    
-static Value CallNativeModule(ExecState *exec_state) {
-    do {
-        if (exec_state->GetArgumentCount() < 1) {
-            break;
-        }
-        Value *arg = exec_state->GetArgument(0);
-        if (!IsTable(arg)) {
-            break;
-        }
-        Value *module = GetTableValue(ValueTo<Table>(arg), std::string("module"));
-        if (!module || !IsString(module)) {
-            break;
-        }
-        Value *method = GetTableValue(ValueTo<Table>(arg), std::string("method"));
-        if (!method || !IsString(method)) {
-            break;
-        }
-        Value *args = GetTableValue(ValueTo<Table>(arg), std::string("args"));
-        if (!args || !IsArray(args)) {
-            break;
-        }
-        int argc = (int)GetArraySize(ValueTo<Array>(args));
-        weex::core::data_render::VNodeRenderManager::GetInstance()->CallNativeModule(exec_state, CStringValue(module), CStringValue(method), argc > 0 ? ArrayToString(ValueTo<Array>(args)) : "", argc);
         
-    } while(0);
-    
-    return Value();
-}
-    
-static Value RequireModule(ExecState *exec_state) {
-    do {
-        if (!exec_state->GetArgumentCount()) {
-            break;
-        }
-        Value *arg = exec_state->GetArgument(0);
-        if (!IsString(arg)) {
-            break;
-        }
-        std::string module_name = CStringValue(arg);
-        std::string module_info;
-        if (!weex::core::data_render::VNodeRenderManager::GetInstance()->RequireModule(exec_state, module_name, module_info)) {
-            break;
-        }
-        return StringToValue(exec_state, module_info);
-        
-    } while (0);
-    
-    return Value();
-}
-    
-static Value RegisterModules(ExecState *exec_state) {
-    do {
-        if (!exec_state->GetArgumentCount()) {
-            break;
-        }
-        Value *arg = exec_state->GetArgument(0);
-        if (!IsArray(arg)) {
-            break;
-        }
-        Array *array = ValueTo<Array>(arg);
-        if (array->items.size() > 0) {
-            std::vector<std::string> args;
-            for (int i = 0; i < array->items.size(); i++) {
-                Value item = array->items[i];
-                if (!IsString(&item)) {
-                    continue;
-                }
-                args.push_back(CStringValue(&item));
-            }
-            if (args.size() > 0) {
-                weex::core::data_render::VNodeRenderManager::GetInstance()->ExecuteRegisterModules(exec_state, args);
-            }
-        }
-        
-    } while (0);
-    return Value();
-}
-
 static Value AppendUrlParam(ExecState *exec_state) {
   size_t length = exec_state->GetArgumentCount();
   if (length != 2) {
@@ -256,6 +176,30 @@ static Value SetComponentRoot(ExecState* exec_state) {
       component->SetRootNode(node);
   }
   return Value();
+}
+
+// setComponentRoot(component, "attrs");
+static Value SetComponentRef(ExecState* exec_state) {
+    VComponent *component = exec_state->GetArgument(0)->type == Value::Type::NIL ?
+    nullptr : reinterpret_cast<VComponent *>(exec_state->GetArgument(0)->cptr);
+    if (!component) {
+        return Value();
+    }
+    Value *attributes = exec_state->GetArgument(1);
+    if (IsTable(attributes)) {
+        Table* attrs = ValueTo<Table>(attributes);
+        auto it = attrs->map.find("ref");
+        if (it != attrs->map.end()) {
+            Value value = it->second;
+            if (value.type == Value::STRING) {
+                component->SetAttribute(it->first, value.str->c_str());
+            } else if (value.type == Value::INT) {
+                std::string str = std::to_string(value.i);
+                component->SetAttribute(it->first, str);
+            }
+        }
+    }
+    return Value();
 }
 
 // createComponent(template_id, "template_name", func_name);
@@ -594,6 +538,7 @@ void VNodeExecEnv::ImportExecEnv(ExecState *state) {
     state->Register("createComponent", CreateComponent);
     state->Register("saveComponentPropsAndData", saveComponentPropsAndData);
     state->Register("setComponentRoot", SetComponentRoot);
+    state->Register("setComponentRef", SetComponentRef);
     state->Register("appendChild", AppendChild);
     state->Register("encodeURIComponent", encodeURIComponent);
     state->Register("encodeURI", encodeURIComponent);
@@ -602,20 +547,8 @@ void VNodeExecEnv::ImportExecEnv(ExecState *state) {
     state->Register("setClassList", SetClassList);
     state->Register("setStyle", SetStyle);
     state->Register("addEvent", AddEvent);
-    state->Register("__callNativeModule", CallNativeModule);
-    // __registerModules deprecated in sversion 5.8 +
-    state->Register("__registerModules", RegisterModules);
-    // __requireModule supporting in sversion 5.8 +
-    state->Register("__requireModule", RequireModule);
     state->Register("Array", state->class_factory()->ClassArray());
     state->Register("String", state->class_factory()->ClassString());
-    state->Register("JSON", state->class_factory()->ClassJSON());
-    state->Register("Object", state->class_factory()->ClassObject());
-    state->Register("RegExp", state->class_factory()->ClassRegExp());
-    state->Register("window", state->class_factory()->ClassWindow());
-    state->Register("Math", state->class_factory()->ClassMath());
-    state->Register("console", state->class_factory()->ClassConsole());
-    RegisterJSCommonFunction(state);
 }
 
 Value JSONToValue(ExecState *state, const json11::Json& json) {

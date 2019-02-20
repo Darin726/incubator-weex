@@ -141,9 +141,26 @@ namespace WeexCore
         // should not enter this function
         assert(false);
     }
-    
+    static WeexByteArray *generator_bytes_array(const char *str, size_t len) {
+        auto *result = (WeexByteArray *)malloc(len + sizeof(WeexByteArray));
+        do {
+            if (!result) {
+                break;
+            }
+            memset(result, 0, len + sizeof(WeexByteArray));
+            result->length = static_cast<uint32_t>(len);
+            memcpy(result->content, str, len);
+            result->content[len] = '\0';
+            
+        } while (0);
+        
+        return result;
+    }
     std::unique_ptr<ValueWithType> IOSSide::CallNativeModule(const char *page_id, const char *module, const char *method, const char *args, int args_length, const char *options, int options_length)
     {
+        ValueWithType *returnValue = new ValueWithType();
+        memset(returnValue, 0, sizeof(ValueWithType));
+        returnValue->type = ParamsType::VOID;
         // should not enter this function
         do {
             NSString *instanceId = NSSTRING(page_id);
@@ -160,11 +177,90 @@ namespace WeexCore
             }
             LOGD("CallNativeModule:[%s]:[%s]=>%s \n", module, method, args);
             WXModuleMethod *method = [[WXModuleMethod alloc] initWithModuleName:moduleName methodName:methodName arguments:newArguments options:nil instance:instance];
-            [method invoke];
+            NSInvocation *invocation = [method invoke];
+            if (!invocation) {
+                break;
+            }
+            const char *returnType = [invocation.methodSignature methodReturnType];
+            switch (returnType[0] == _C_CONST ? returnType[1] : returnType[0]) {
+                case _C_VOID: {
+                    // 1.void
+                    returnValue->type = ParamsType::VOID;
+                    break;
+                }
+                case _C_ID: {
+                    // 2.id
+                    void *value;
+                    [invocation getReturnValue:&value];
+                    id object = (__bridge id)value;
+                    if ([object isKindOfClass:[NSString class]]) {
+                        returnValue->type = ParamsType::BYTEARRAYSTRING;
+                        const char *pcstr_utf8 = [(NSString *)object UTF8String];
+                        returnValue->value.byteArray = generator_bytes_array(pcstr_utf8, ((NSString *)object).length);
+                    }
+                    if ([object isKindOfClass:[NSDictionary class]] || [object isKindOfClass:[NSArray class]]) {
+                        NSString *jsonString = [WXUtility JSONString:object];
+                        returnValue->type = ParamsType::BYTEARRAYJSONSTRING;
+                        returnValue->value.byteArray = generator_bytes_array(jsonString.UTF8String, jsonString.length);
+                    }
+                    break;
+                }
+#define WX_MODULE_INT32_VALUE_RET_CASE(ctype, ttype) \
+case ctype: {                         \
+ttype value;                          \
+[invocation getReturnValue:&value];   \
+returnValue->type = ParamsType::INT32; \
+returnValue->value.int32Value = value; \
+break; \
+}
+#define WX_MODULE_INT64_VALUE_RET_CASE(ctype, ttype) \
+case ctype: {                         \
+ttype value;                          \
+[invocation getReturnValue:&value];   \
+returnValue->type = ParamsType::INT64; \
+returnValue->value.int64Value = value; \
+break; \
+}
+                // 3.number
+                WX_MODULE_INT32_VALUE_RET_CASE(_C_CHR, char)
+                WX_MODULE_INT32_VALUE_RET_CASE(_C_UCHR, unsigned char)
+                WX_MODULE_INT32_VALUE_RET_CASE(_C_SHT, short)
+                WX_MODULE_INT32_VALUE_RET_CASE(_C_USHT, unsigned short)
+                WX_MODULE_INT32_VALUE_RET_CASE(_C_INT, int)
+                WX_MODULE_INT32_VALUE_RET_CASE(_C_UINT, unsigned int)
+                WX_MODULE_INT32_VALUE_RET_CASE(_C_BOOL, BOOL)
+                WX_MODULE_INT64_VALUE_RET_CASE(_C_LNG, long)
+                WX_MODULE_INT64_VALUE_RET_CASE(_C_ULNG, unsigned long)
+                WX_MODULE_INT64_VALUE_RET_CASE(_C_LNG_LNG, long long)
+                WX_MODULE_INT64_VALUE_RET_CASE(_C_ULNG_LNG, unsigned long long)
+                case _C_FLT:
+                {
+                    float value;
+                    [invocation getReturnValue:&value];
+                    returnValue->type = ParamsType::FLOAT;
+                    returnValue->value.floatValue = value;
+                    break;
+                }
+                case _C_DBL:
+                {
+                    double value;
+                    [invocation getReturnValue:&value];
+                    returnValue->type = ParamsType::DOUBLE;
+                    returnValue->value.doubleValue = value;
+                    break;
+                }
+                case _C_STRUCT_B:
+                case _C_CHARPTR:
+                case _C_PTR:
+                case _C_CLASS: {
+                    returnValue->type = ParamsType::JSUNDEFINED;
+                    break;
+                }
+            }
             
         } while (0);
         
-        return std::unique_ptr<ValueWithType>();
+        return std::unique_ptr<ValueWithType>(returnValue);
     }
         
     void IOSSide::CallNativeComponent(const char* pageId, const char* ref, const char *method,
@@ -766,10 +862,12 @@ static WeexCore::ScriptBridge* jsBridge = nullptr;
 
 + (void)createDataRenderInstance:(NSString *)pageId contents:(NSData *)contents options:(NSDictionary *)options data:(id)data
 {
+    
     auto node_manager = weex::core::data_render::VNodeRenderManager::GetInstance();
+    NSString *envString =  [WXUtility JSONString:[WXUtility getEnvironment]];
     NSString *optionsString = [WXUtility JSONString:options];
     NSString *dataString = [WXUtility JSONString:data];
-    node_manager->CreatePage(static_cast<const char *>(contents.bytes), contents.length, [pageId UTF8String], [optionsString UTF8String], dataString ? [dataString UTF8String] : "", [=](const char* javascript) {
+    node_manager->CreatePage(static_cast<const char *>(contents.bytes), contents.length, [pageId UTF8String], [optionsString UTF8String], envString.UTF8String, dataString ? [dataString UTF8String] : "", [=](const char *javascript) {
         if (!javascript) {
             return;
         }
@@ -795,6 +893,19 @@ static WeexCore::ScriptBridge* jsBridge = nullptr;
     NSString* nsDomChanges = [WXUtility JSONString:domChanges];
     auto vnode_manager = weex::core::data_render::VNodeRenderManager::GetInstance();
     vnode_manager->FireEvent([pageId UTF8String] ? : "", [ref UTF8String] ? : "", [event UTF8String] ? : "", [params UTF8String] ? : "", [nsDomChanges UTF8String] ? : "");
+}
+
++ (void)invokeCallBack:(NSString *)pageId function:(NSString *)funcId args:(NSDictionary *)args keepAlive:(BOOL)keepAlive
+{
+    do {
+        if (![funcId isKindOfClass:[NSString class]] || !funcId.length) {
+            break;
+        }
+        NSString *params = [WXUtility JSONString:args];
+        auto vnode_manager = weex::core::data_render::VNodeRenderManager::GetInstance();
+        vnode_manager->InvokeCallback(pageId.UTF8String ? : "", funcId.UTF8String, params.UTF8String ? : "", keepAlive);
+        
+    } while (0);
 }
 
 + (void)registerModules:(NSDictionary *)modules {

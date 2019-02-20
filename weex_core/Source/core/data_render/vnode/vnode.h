@@ -25,6 +25,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <memory>
+#include "api/qking_api.h"
 #include "core/render/node/render_object.h"
 
 namespace weex {
@@ -59,7 +60,10 @@ class VNode {
 
   void AddEvent(const std::string &event,
                 const std::vector<Value> &params);
+
   void AddEvent(const std::string &event, void *func, void *inst);
+    
+  void AddEvent(const std::string &event, qking_value_t handler);
 
   void AddOnEventListener();
 
@@ -82,6 +86,9 @@ class VNode {
     return render_object_ref_;
   }
 
+  inline void set_ref(std::string ref) {
+      ref_ = ref;
+  }
   inline void set_render_object_ref(std::string ref) {
     render_object_ref_ = std::move(ref);
   }
@@ -97,6 +104,10 @@ class VNode {
   }
   inline std::map<std::string, void *> *events() const {
     return events_;
+  }
+
+  inline std::map<std::string, qking_value_t> *qking_events() const {
+    return qking_events_;
   }
 
   inline EventParamsMap *event_params_map() const {
@@ -145,6 +156,7 @@ class VNode {
   std::map<std::string, std::string> *attributes_;
   // This events if record event with func from vm
   std::map<std::string, void *> *events_;
+  std::map<std::string, qking_value_t> *qking_events_;
   // This events if record event with value from vm
   std::unique_ptr<EventParamsMap> event_params_map_;
   std::unique_ptr<OnEventListener> on_event_listener_;

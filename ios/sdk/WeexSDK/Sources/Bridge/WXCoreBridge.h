@@ -169,7 +169,7 @@ namespace WeexCore
 
 + (void)layoutRenderObject:(void*)object size:(CGSize)size page:(NSString*)pageId;
 
-+ (void*)copyRenderObject:(void*)source replacedRef:(NSString*)ref;
++ (void *)copyRenderObject:(void*)source replacedRef:(NSString*)ref;
 
 + (void)addChildRenderObject:(void*)child toParent:(void*)parent;
 
@@ -200,6 +200,8 @@ namespace WeexCore
 + (void)callUpdateFinish:(NSString*)pageId;
 
 + (void)fireEvent:(NSString *)pageId ref:(NSString *)ref event:(NSString *)event args:(NSDictionary *)args domChanges:(NSDictionary *)domChanges;
+
++ (void)invokeCallBack:(NSString *)pageId function:(NSString *)funcId args:(NSDictionary *)args keepAlive:(BOOL)keepAlive;
 
 + (void)registerModules:(NSDictionary *)modules;
 

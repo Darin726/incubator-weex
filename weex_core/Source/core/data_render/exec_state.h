@@ -35,8 +35,9 @@
 namespace weex {
 namespace core {
 namespace data_render {
-    
-#define VM_EXEC_STACK_SIZE               512
+
+#define FUNC_STACK_SIZE               256
+#define EXEC_STACK_SIZE               8
 
 class ValueRef {
     friend class ExecState;
@@ -167,19 +168,31 @@ class FuncState {
   int argc_{0};
   std::string name_{""};
 };
-        
-// TODO Each Func should contain a stack whose size is 256
-class ExecStack {
- public:
-  ExecStack() : stack_(VM_EXEC_STACK_SIZE), top_(&stack_[0]) {}
-  Value** top() { return &top_; }
-  Value* base() { return &stack_[0]; }
-  void reset();
- private:
-  std::vector<Value> stack_;
-  Value *top_;
+
+class FuncStack {
+public:
+    FuncStack() : stack_(FUNC_STACK_SIZE), top_(&stack_[0]) {}
+    Value** top() { return &top_; }
+    Value* base() { return &stack_[0]; }
+    void reset();
+private:
+    std::vector<Value> stack_;
+    Value *top_;
 };
-    
+
+class ExecStack {
+public:
+    ExecStack();
+    ~ExecStack();
+    FuncStack* current_func_stack() { return stacks_[current_index_];}
+    size_t current_index() const {return current_index_;}
+    void set_current_index(size_t index);
+    void reset();
+private:
+    std::vector<FuncStack*> stacks_;
+    size_t current_index_;
+};
+
 class ExecState {
  public:
   ExecState(VM *vm);
@@ -202,7 +215,7 @@ class ExecState {
   inline Variables *global() { return global_.get(); }
   inline void reset(FuncState *func_state) { func_state_.reset(func_state); }
   inline FuncState *func_state() { return func_state_.get(); }
-  inline ExecStack *stack() { return stack_.get(); }
+  inline ExecStack *exec_stack() { return exec_stack_.get(); }
   inline StringTable *string_table() { return string_table_.get(); }
   inline VNodeRenderContext *context() { return render_context_.get(); }
   inline ClassFactory *class_factory() { return class_factory_.get(); }
@@ -224,7 +237,7 @@ class ExecState {
   std::vector<Frame> frames_;
   std::vector<ValueRef *> refs_;
   std::unique_ptr<Variables> global_;
-  std::unique_ptr<ExecStack> stack_;
+  std::unique_ptr<ExecStack> exec_stack_;
   std::unique_ptr<FuncState> func_state_;
   std::unique_ptr<StringTable> string_table_;
   std::unique_ptr<VNodeRenderContext> render_context_;
