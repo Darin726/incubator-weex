@@ -74,32 +74,27 @@ bool qking_set_assembly_code(qking_executor_t executor, uint8_t *code,
   return succ;
 }
 
-bool qking_decode_binary_info(uint8_t *code, size_t size,qking_info_section_struct* info){
-  if (!code){
-    return false;
-  }
-
-  uint8_t seg0 = *((uint8_t*)(code+0));
-  uint8_t seg1 = *((uint8_t*)(code+1));
-  uint8_t seg2 = *((uint8_t*)(code+2));
-  uint8_t seg3 = *((uint8_t*)(code+3));
-  uint32_t magic_code = *((uint32_t*)(code+3));
-  if (seg0 == 0x04 && seg1 == 0x00 && seg2 == 0x00 && seg3 == 0x00 && magic_code == EXEC_BINARY_MAGIC_NUMBER
-    && size >= sizeof(qking_info_section_struct)){
-    //has info section
-    if (info){
-      *info = *((qking_info_section_struct*)code);
+bool qking_decode_binary_info(uint8_t *code, size_t size, qking_info_section_struct *info) {
+    if (!code) {
+        return false;
     }
-    return true;
-  } else {
-    return false;
-  }
+    uint32_t seg0 = *((uint32_t *)(code + 0));
+    uint32_t magic_code = *((uint32_t *)(code + 4));
+    if (seg0 == EXEC_BINARY_MAGIC_SEG_START && magic_code == EXEC_BINARY_MAGIC_NUMBER
+        && size >= sizeof(qking_info_section_struct)) {
+        //has info section
+        if (info) {
+            *info = *((qking_info_section_struct *)code);
+        }
+        return true;
+    } else {
+        return false;
+    }
 }
-
 
 #ifdef CONFIG_DISABLE_COMPILER_BUILTIN
 bool qking_set_compile_code(qking_executor_t executor, const char *pstr,
-                            qking_value_t *error_value){
+                            qking_value_t *error_value) {
   return false;
 }
 #endif
