@@ -381,7 +381,15 @@ std::string VNodeRenderManager::CreatePageWithContent(const uint8_t *contents, s
 #endif
     VNodeRenderContext *context = new VNodeRenderContext();
     context->page_id(page_id);
-    qking_executor_t executor = qking_create_executor(context);
+    qking_executor_t executor;
+    qking_info_section_struct info_section_struct;
+    if (qking_decode_binary_info(const_cast<uint8_t*>(contents), static_cast<size_t>(length),
+                                 &info_section_struct)) {
+      executor =
+          qking_create_executor_size(context, info_section_struct.mem_size);
+    } else {
+      executor = qking_create_executor(context);
+    }
     executors_.insert({page_id, executor});
     qking_api_register_weex_environment();
     std::string err;
