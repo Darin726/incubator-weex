@@ -482,8 +482,8 @@ void WXPerformBlockSyncOnBridgeThread(void (^block) (void))
     WXSDKInstance *instance = [WXSDKManager instanceForID:instanceId];
     if (instance.asmRender) {
         WXPerformBlockOnComponentThread(^{
-            [WXCoreBridge invokeCallBack:instanceId function:funcId args:params keepAlive:keepAlive];
-        });
+            [WXCoreBridge invokeCallBack:instanceId function:funcId args:params ? [params copy]:@"\"{}\"" keepAlive:keepAlive];
+        });        
     }
     else {
         WXCallJSMethod *method = [[WXCallJSMethod alloc] initWithModuleName:@"jsBridge" methodName:@"callback" arguments:args instance:instance];
