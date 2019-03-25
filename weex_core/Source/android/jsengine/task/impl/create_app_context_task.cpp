@@ -22,7 +22,7 @@
 
 #include "create_app_context_task.h"
 
-CreateAppContextTask::CreateAppContextTask(const String &instanceId, const String &script) : WeexTask(instanceId) {
+CreateAppContextTask::CreateAppContextTask(const std::string &instanceId, const std::string &script) : WeexTask(instanceId) {
     this->script = script;
 }
 

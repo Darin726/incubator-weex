@@ -28,14 +28,14 @@
 
 class UpdateGlobalConfigTask: public WeexTask {
 public:
-    UpdateGlobalConfigTask(const String &script);
+    UpdateGlobalConfigTask(const std::string &script);
 
     void run(WeexRuntime *runtime) override;
 
     std::string taskName() override { return "UpdateGlobalConfigTask"; }
 
 private:
-    String script;
+    std::string script;
 
 };
 

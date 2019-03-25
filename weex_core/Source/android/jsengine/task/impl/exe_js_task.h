@@ -28,13 +28,9 @@
 
 class ExeJsTask : public WeexTask {
 public:
-    ExeJsTask(const String &instanceId, std::vector<VALUE_WITH_TYPE *> &params, bool withResult = false);
-    ExeJsTask(const String &instanceId, std::vector<VALUE_WITH_TYPE *> &params, long callback_id);
-
-    ExeJsTask(const String &instanceId, IPCArguments *arguments, size_t startCount, bool withResult = false);
-
-
-    void addExtraArg(String arg);
+    ExeJsTask(const std::string  &instanceId, std::vector<VALUE_WITH_TYPE *> &params, bool withResult = false);
+    ExeJsTask(const std::string &instanceId, std::vector<VALUE_WITH_TYPE *> &params, long callback_id);
+    void addExtraArg(std::string arg);
 
 
     void run(WeexRuntime *runtime) override;
@@ -49,7 +45,7 @@ private:
     bool withResult;
     long callbackId;
     ExeJsArgs *exeJsArgs;
-    std::vector<String> extraArgs;
+    std::vector<std::string> extraArgs;
 };
 
 

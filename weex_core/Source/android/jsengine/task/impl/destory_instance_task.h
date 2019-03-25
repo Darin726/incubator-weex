@@ -28,7 +28,7 @@
 
 class DestoryInstanceTask :public  WeexTask {
 public:
-    explicit DestoryInstanceTask(const String &instanceId);
+    explicit DestoryInstanceTask(const std::string &instanceId);
 
 
     void run(WeexRuntime *runtime) override;

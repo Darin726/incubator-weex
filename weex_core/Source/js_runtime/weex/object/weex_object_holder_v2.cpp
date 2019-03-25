@@ -30,39 +30,6 @@ WeexObjectHolderV2::WeexObjectHolderV2(unicorn::RuntimeVM *vm, TimerQueue *timeQ
     this->isMultiProgress = isMultiProgress;
 }
 
-
-void WeexObjectHolderV2::initFromIPCArguments(IPCArguments *arguments, size_t startCount, bool forAppContext) {
-    size_t count = arguments->getCount();
-    std::vector<INIT_FRAMEWORK_PARAMS *> params;
-
-    for (size_t i = startCount; i < count; i += 2) {
-        if (arguments->getType(i) != IPCType::BYTEARRAY) {
-            continue;
-        }
-        if (arguments->getType(1 + i) != IPCType::BYTEARRAY) {
-            continue;
-        }
-        const IPCByteArray *ba = arguments->getByteArray(1 + i);
-
-        const IPCByteArray *ba_type = arguments->getByteArray(i);
-
-        auto init_framework_params = (INIT_FRAMEWORK_PARAMS *) malloc(sizeof(INIT_FRAMEWORK_PARAMS));
-
-        if (init_framework_params == nullptr) {
-            return;
-        }
-
-        memset(init_framework_params, 0, sizeof(INIT_FRAMEWORK_PARAMS));
-
-        init_framework_params->type = IPCByteArrayToWeexByteArray(ba_type);
-        init_framework_params->value = IPCByteArrayToWeexByteArray(ba);
-
-        params.push_back(init_framework_params);
-    }
-
-    initFromParams(params, forAppContext);
-}
-
 void WeexObjectHolderV2::initFromParams(std::vector<INIT_FRAMEWORK_PARAMS *> &params, bool forAppContext) {
     if (forAppContext) {
         LOG_RUNTIME("Create MiniApp worker Context");

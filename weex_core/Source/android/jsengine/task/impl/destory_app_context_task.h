@@ -28,7 +28,7 @@
 
 class DestoryAppContextTask: public WeexTask {
 public:
-    DestoryAppContextTask(const String &instanceId);
+    DestoryAppContextTask(const std::string &instanceId);
 
     void run(WeexRuntime *runtime) override;
     std::string taskName() override { return "DestoryAppContextTask"; }

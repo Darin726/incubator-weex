@@ -20,6 +20,7 @@
 // Created by Darin on 20/07/2018.
 //
 
+#include <include/WeexApiHeader.h>
 #include "weex_task.h"
 
 void WeexTask::Future::setResult(std::unique_ptr<WeexJSResult> &result) {

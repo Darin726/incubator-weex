@@ -30,60 +30,60 @@ int ScriptSideInSimple::InitFramework(
     const char *script, std::vector<INIT_FRAMEWORK_PARAMS *> &params) {
   LOGD("ScriptSideInSimple::InitFramework");
 
-  return runtime_->initFramework(String::fromUTF8(script), params);
+  return runtime_->initFramework(std::string(script), params);
 }
 
 int ScriptSideInSimple::InitAppFramework(
     const char *instanceId, const char *appFramework,
     std::vector<INIT_FRAMEWORK_PARAMS *> &params) {
   LOGD("ScriptSideInSimple::InitAppFramework");
-  return runtime_->initAppFramework(String::fromUTF8(instanceId),
-                                    String::fromUTF8(appFramework), params);
+  return runtime_->initAppFramework(std::string(instanceId),
+                                    std::string(appFramework), params);
 }
 
 int ScriptSideInSimple::CreateAppContext(const char *instanceId,
                                          const char *jsBundle) {
   LOGD("ScriptSideInSimple::CreateAppContext");
-  return runtime_->createAppContext(String::fromUTF8(instanceId),
-                                    String::fromUTF8(jsBundle));
+  return runtime_->createAppContext(std::string(instanceId),
+                                    std::string(jsBundle));
 }
 
 std::unique_ptr<WeexJSResult> ScriptSideInSimple::ExecJSOnAppWithResult(const char *instanceId,
                                                 const char *jsBundle) {
   LOGD("ScriptSideInSimple::ExecJSOnAppWithResult");
-  return runtime_->exeJSOnAppWithResult(String::fromUTF8(instanceId),
-                                        String::fromUTF8(jsBundle));
+  return runtime_->exeJSOnAppWithResult(std::string(instanceId),
+                                        std::string(jsBundle));
 }
 
 int ScriptSideInSimple::CallJSOnAppContext(
     const char *instanceId, const char *func,
     std::vector<VALUE_WITH_TYPE *> &params) {
   LOGD("ScriptSideInSimple::CallJSOnAppContext");
-  return runtime_->callJSOnAppContext(String::fromUTF8(instanceId),
-                                      String::fromUTF8(func), params);
+  return runtime_->callJSOnAppContext(std::string(instanceId),
+                                      std::string(func), params);
 }
 
 int ScriptSideInSimple::DestroyAppContext(const char *instanceId) {
   LOGD("ScriptSideInSimple::DestroyAppContext");
-  return runtime_->destroyAppContext(String::fromUTF8(instanceId));
+  return runtime_->destroyAppContext(std::string(instanceId));
 }
 
 int ScriptSideInSimple::ExecJsService(const char *source) {
   LOGD("ScriptSideInSimple::ExecJsService");
-  return runtime_->exeJsService(String::fromUTF8(source));
+  return runtime_->exeJsService(std::string(source));
 }
 
 int ScriptSideInSimple::ExecTimeCallback(const char *source) {
   LOGD("ScriptSideInSimple::ExecTimeCallback");
-  return runtime_->exeCTimeCallback(String::fromUTF8(source));
+  return runtime_->exeCTimeCallback(std::string(source));
 }
 
 int ScriptSideInSimple::ExecJS(const char *instanceId, const char *nameSpace,
                                const char *func,
                                std::vector<VALUE_WITH_TYPE *> &params) {
   LOGD("ScriptSideInSimple::ExecJS");
-  return runtime_->exeJS(String::fromUTF8(instanceId),
-                         String::fromUTF8(nameSpace), String::fromUTF8(func),
+  return runtime_->exeJS(std::string(instanceId),
+                         std::string(nameSpace), std::string(func),
                          params);
 }
 
@@ -91,18 +91,18 @@ std::unique_ptr<WeexJSResult>  ScriptSideInSimple::ExecJSWithResult(
     const char *instanceId, const char *nameSpace, const char *func,
     std::vector<VALUE_WITH_TYPE *> &params) {
   LOGD("ScriptSideInSimple::ExecJSWithResult");
-  return runtime_->exeJSWithResult(String::fromUTF8(instanceId),
-                                   String::fromUTF8(nameSpace),
-                                   String::fromUTF8(func), params);
+  return runtime_->exeJSWithResult(std::string(instanceId),
+                                   std::string(nameSpace),
+                                   std::string(func), params);
 }
 
 void ScriptSideInSimple::ExecJSWithCallback(
     const char *instanceId, const char *nameSpace, const char *func,
     std::vector<VALUE_WITH_TYPE *> &params, long callback_id) {
   LOGD("ScriptSideInSimple::ExecJSWithResult");
-  runtime_->exeJSWithResult(String::fromUTF8(instanceId),
-                                   String::fromUTF8(nameSpace),
-                                   String::fromUTF8(func), params);
+  runtime_->exeJSWithResult(std::string(instanceId),
+                            std::string(nameSpace),
+                            std::string(func), params);
 }
 
 int ScriptSideInSimple::CreateInstance(const char *instanceId, const char *func,
@@ -115,26 +115,26 @@ int ScriptSideInSimple::CreateInstance(const char *instanceId, const char *func,
       instanceId, func, script, opts, initData, extendsApi);
 
   return runtime_->createInstance(
-      String::fromUTF8(instanceId), String::fromUTF8(func),
-      String::fromUTF8(script), String::fromUTF8(opts),
-      String::fromUTF8(initData), String::fromUTF8(extendsApi),params);
+      std::string(instanceId), std::string(func),
+      std::string(script), std::string(opts),
+      std::string(initData), std::string(extendsApi),params);
 }
 
 std::unique_ptr<WeexJSResult> ScriptSideInSimple::ExecJSOnInstance(const char *instanceId,
                                            const char *script) {
   LOGD("ScriptSideInSimple::ExecJSOnInstance");
-  return runtime_->exeJSOnInstance(String::fromUTF8(instanceId),
-                                   String::fromUTF8(script));
+  return runtime_->exeJSOnInstance(std::string(instanceId),
+                                   std::string(script));
 }
 
 int ScriptSideInSimple::DestroyInstance(const char *instanceId) {
   LOGD("ScriptSideInSimple::DestroyInstance");
-  return runtime_->destroyInstance(String::fromUTF8(instanceId));
+  return runtime_->destroyInstance(std::string(instanceId));
 }
 
 int ScriptSideInSimple::UpdateGlobalConfig(const char *config) {
   LOGD("ScriptSideInSimple::UpdateGlobalConfig");
-  return runtime_->updateGlobalConfig(String::fromUTF8(config));
+  return runtime_->updateGlobalConfig(std::string(config));
 }
 }  // namespace js
 }  // namespace bridge

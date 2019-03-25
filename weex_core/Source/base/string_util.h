@@ -57,6 +57,9 @@ static uint32_t convert_single_char(char16_t in) {
 }
 
 inline static std::string to_utf8(uint16_t* utf16, size_t length) {
+  if(length == 0) {
+    return "";
+  }
   char16_t *WC = reinterpret_cast<char16_t *>(utf16);
   char* dest = static_cast<char*>(malloc(length * sizeof(char16_t) + sizeof(char16_t)));
   memset(dest, 0, length * sizeof(char16_t) + sizeof(char16_t));

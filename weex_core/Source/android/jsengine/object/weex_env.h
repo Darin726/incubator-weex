@@ -31,6 +31,10 @@
 #include "android/jsengine/weex_ipc_server.h"
 #include "android/jsengine/weex_ipc_client.h"
 
+namespace WeexCore {
+    class ScriptBridge;
+}
+
 class WeexEnv {
 
 public:

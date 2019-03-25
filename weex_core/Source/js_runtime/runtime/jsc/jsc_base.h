@@ -35,8 +35,7 @@
 #ifndef FLUTTER_UNICORN_RUNTIME_JSC_JSC_BASE_H_
 #define FLUTTER_UNICORN_RUNTIME_JSC_JSC_BASE_H_
 
-#include <JavaScriptCore/JavaScript.h>
-
+#include <JavaScriptCore/JSContextRef.h>
 typedef JSContextRef JSRunTimeContext;
 typedef JSClassRef JSRunTimeClass;
 typedef JSObjectRef JSRunTimeObject;

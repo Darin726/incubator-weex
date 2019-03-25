@@ -37,6 +37,8 @@
 #include "js_runtime/runtime/runtime_vm.h"
 #include "js_runtime/utils/log_utils.h"
 
+#include "include/JavaScriptCore/JSObjectRef.h"
+
 typedef JSObjectGetPropertyCallback GetterCallback;
 typedef JSObjectSetPropertyCallback SetterCallback;
 typedef JSObjectCallAsFunctionCallback FunctionCallback;

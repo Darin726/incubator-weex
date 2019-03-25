@@ -35,7 +35,7 @@
 #ifndef FLUTTER_UNICORN_RUNTIME_JSC_ENGINE_CONTEXT_JSC_H_
 #define FLUTTER_UNICORN_RUNTIME_JSC_ENGINE_CONTEXT_JSC_H_
 
-#include <JavaScriptCore/JavaScript.h>
+#include "include/JavaScriptCore/JavaScript.h"
 #include <memory>
 #include <string>
 #include "js_runtime/runtime/engine_context.h"

@@ -21,6 +21,7 @@
 //
 
 #include "exe_js_task.h"
+#include "android/jsengine/weex_runtime.h"
 
 void ExeJsTask::run(WeexRuntime *runtime) {
     if (extraArgs.size() < 2)
@@ -41,29 +42,22 @@ void ExeJsTask::run(WeexRuntime *runtime) {
     }
 }
 
-void ExeJsTask::addExtraArg(String arg) {
+void ExeJsTask::addExtraArg(std::string arg) {
     this->extraArgs.push_back(arg);
 }
 
-ExeJsTask::ExeJsTask(const String &instanceId, std::vector<VALUE_WITH_TYPE *> &params, bool withResult) : WeexTask(
+ExeJsTask::ExeJsTask(const std::string &instanceId, std::vector<VALUE_WITH_TYPE *> &params, bool withResult) : WeexTask(
         instanceId) {
     this->withResult = withResult;
     callbackId = -1;
     exeJsArgs = new ExeJsArgs(params);
 }
 
-ExeJsTask::ExeJsTask(const String &instanceId, std::vector<VALUE_WITH_TYPE *> &params, long callback_id) : WeexTask(
+ExeJsTask::ExeJsTask(const std::string &instanceId, std::vector<VALUE_WITH_TYPE *> &params, long callback_id) : WeexTask(
         instanceId) {
     this->withResult = true;
     callbackId = callback_id;
     exeJsArgs = new ExeJsArgs(params);
-}
-
-ExeJsTask::ExeJsTask(const String &instanceId, IPCArguments *arguments, size_t startCount, bool withResult) : WeexTask(
-        instanceId) {
-    this->withResult = withResult;
-    callbackId = -1;
-    this->exeJsArgs = new ExeJsArgs(arguments, startCount);
 }
 
 ExeJsTask::~ExeJsTask() {
@@ -71,9 +65,9 @@ ExeJsTask::~ExeJsTask() {
 }
 
 ExeJsTask *ExeJsTask::clone() {
-    ExeJsTask *task = new ExeJsTask(instanceId, this->exeJsArgs->params);
-    for (int i = 0; i < this->extraArgs.size(); ++i) {
-        task->addExtraArg(this->extraArgs[i]);
+    auto *task = new ExeJsTask(instanceId, this->exeJsArgs->params);
+    for (const auto &extraArg : this->extraArgs) {
+        task->addExtraArg(extraArg);
     }
     return task;
 }

@@ -22,7 +22,7 @@
 
 #include "call_js_on_app_context_task.h"
 
-CallJsOnAppContextTask::CallJsOnAppContextTask(const String &instanceId, const String &func,
+CallJsOnAppContextTask::CallJsOnAppContextTask(const std::string &instanceId, const std::string &func,
                                                std::vector<VALUE_WITH_TYPE *> &params) : WeexTask(instanceId) {
 
     this->func = func;
@@ -31,7 +31,7 @@ CallJsOnAppContextTask::CallJsOnAppContextTask(const String &instanceId, const S
 
 }
 
-CallJsOnAppContextTask::CallJsOnAppContextTask(const String &instanceId, const String &func, IPCArguments *arguments,
+CallJsOnAppContextTask::CallJsOnAppContextTask(const std::string &instanceId, const std::string &func, IPCArguments *arguments,
                                                size_t startCount) : WeexTask(instanceId) {
 
     this->func = func;

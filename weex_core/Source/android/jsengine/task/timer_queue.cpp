@@ -23,184 +23,185 @@
 #include "timer_queue.h"
 #include "android/jsengine/task/weex_task_queue.h"
 #include "android/jsengine/object/weex_env.h"
+#include "android/jsengine/weex_runtime.h"
 
 static void *startThread(void *td) {
-    auto *self = static_cast<TimerQueue *>(td);
-    self->start();
-    return NULL;
+  auto *self = static_cast<TimerQueue *>(td);
+  self->start();
+  return NULL;
 }
 
 void TimerQueue::init() {
 
-    if (this->isInit)
-        return;
+  if (this->isInit)
+    return;
 
-    this->isInit = true;
+  this->isInit = true;
 
-    pthread_t thread;
-    pthread_create(&thread, nullptr, startThread, this);
-    pthread_setname_np(thread, "TimerQueueThread");
+  pthread_t thread;
+  pthread_create(&thread, nullptr, startThread, this);
+  pthread_setname_np(thread, "TimerQueueThread");
 }
 
 void TimerQueue::start() {
-    while (true) {
-        auto pTask = getTask();
-        LOGE("getTask return task");
-        bool ptaskHasGlobalObject;
-        if (WeexEnv::getEnv()->isUseRunTimeApi()){
-            ptaskHasGlobalObject = weexTaskQueue->weexRuntime->hasInstanceId(pTask->instanceID);
-        } else{
-            ptaskHasGlobalObject = pTask->global_object_ != nullptr;
-        }
-        //LOGE("[weex-task]getTask return task,ptaskHasGlobalObject :%d ",ptaskHasGlobalObject);
-
-        if(ptaskHasGlobalObject && weexTaskQueue->weexRuntime->hasInstanceId(pTask->instanceID)) {
-          //  LOGE("[weex-task]before add  to weexTaskQueue");
-            weexTaskQueue->addTimerTask(pTask->instanceID, pTask->m_function, pTask->taskId,pTask->global_object_, !pTask->repeat,pTask->from_instance_);
-            //LOGE("[weex-task]end add  to weexTaskQueue");
-            if (pTask->repeat && ptaskHasGlobalObject && weexTaskQueue->weexRuntime->hasInstanceId(pTask->instanceID)) {
-                LOGE("repreat");
-                addTimerTask(new TimerTask(pTask));
-            }
-        }
-        delete (pTask);
-        pTask = nullptr;
+  while (true) {
+    auto pTask = getTask();
+    LOGE("getTask return task");
+    bool ptaskHasGlobalObject;
+    if (WeexEnv::getEnv()->isUseRunTimeApi()) {
+      ptaskHasGlobalObject = weexTaskQueue->weexRuntime->hasInstanceId(pTask->instanceID);
+    } else {
+      //  ptaskHasGlobalObject = pTask->global_object_ != nullptr;
     }
+    //LOGE("[weex-task]getTask return task,ptaskHasGlobalObject :%d ",ptaskHasGlobalObject);
+
+    if (ptaskHasGlobalObject && weexTaskQueue->weexRuntime->hasInstanceId(pTask->instanceID)) {
+      //  LOGE("[weex-task]before add  to weexTaskQueue");
+      weexTaskQueue->addTimerTask(pTask->instanceID,
+                                  pTask->m_function,
+                                  pTask->taskId,
+                                  !pTask->repeat,
+                                  pTask->from_instance_);
+      //LOGE("[weex-task]end add  to weexTaskQueue");
+      if (pTask->repeat && ptaskHasGlobalObject
+          && weexTaskQueue->weexRuntime->hasInstanceId(pTask->instanceID)) {
+        LOGE("repreat");
+        addTimerTask(new TimerTask(pTask));
+      }
+    }
+    delete (pTask);
+    pTask = nullptr;
+  }
 }
 
 TimerQueue::TimerQueue(WeexTaskQueue *taskQueue) {
-    nextTaskWhen = 0;
-    this->weexTaskQueue = taskQueue;
-    init();
+  nextTaskWhen = 0;
+  this->weexTaskQueue = taskQueue;
+  init();
 }
 
-
 int TimerQueue::addTimerTask(TimerTask *timerTask) {
-    threadLocker.lock();
-    auto size = timerQueue_.size();
-    if (timerQueue_.empty()) {
+  threadLocker.lock();
+  auto size = timerQueue_.size();
+  if (timerQueue_.empty()) {
+    timerQueue_.push_back(timerTask);
+  } else {
+    auto begin = timerQueue_.begin();
+    int i = 0;
+    for (; i < size; ++i) {
+      auto it = timerQueue_[i];
+      if (timerTask->when < it->when) {
+        timerQueue_.insert(begin + i, timerTask);
+        break;
+      } else if (i == size - 1) {
         timerQueue_.push_back(timerTask);
-    } else {
-        auto begin = timerQueue_.begin();
-        int i = 0;
-        for (; i < size; ++i) {
-            auto it = timerQueue_[i];
-            if (timerTask->when < it->when) {
-                timerQueue_.insert(begin + i, timerTask);
-                break;
-            } else if (i == size - 1) {
-                timerQueue_.push_back(timerTask);
-                break;
-            }
-        }
+        break;
+      }
     }
+  }
 
-    size = timerQueue_.size();
-    if (size > 0) {
-        nextTaskWhen = timerQueue_.front()->when;
-    }
-    threadLocker.unlock();
-    threadLocker.signal();
-    return size;
+  size = timerQueue_.size();
+  if (size > 0) {
+    nextTaskWhen = timerQueue_.front()->when;
+  }
+  threadLocker.unlock();
+  threadLocker.signal();
+  return size;
 }
 
 //对比时间
 TimerTask *TimerQueue::getTask() {
-    TimerTask *task = nullptr;
-    while (task == nullptr) {
-        threadLocker.lock();
-        while (timerQueue_.empty() || microTime() < nextTaskWhen) {
-            if (timerQueue_.empty()) {
-                threadLocker.wait();
-            } else {
-                auto i = threadLocker.waitTimeout(nextTaskWhen);
-                if (i == ETIMEDOUT) {
-                    break;
-                }
-            }
+  TimerTask *task = nullptr;
+  while (task == nullptr) {
+    threadLocker.lock();
+    while (timerQueue_.empty() || microTime() < nextTaskWhen) {
+      if (timerQueue_.empty()) {
+        threadLocker.wait();
+      } else {
+        auto i = threadLocker.waitTimeout(nextTaskWhen);
+        if (i == ETIMEDOUT) {
+          break;
         }
-
-        if (timerQueue_.empty()) {
-            threadLocker.unlock();
-            continue;
-        }
-        assert(!taskQueue_.empty());
-        TimerTask *header = timerQueue_.front();
-        nextTaskWhen = header->when;
-        if (microTime() > nextTaskWhen) {
-            timerQueue_.pop_front();
-            task = header;
-        } else {
-            threadLocker.unlock();
-            continue;
-        }
-        threadLocker.unlock();
+      }
     }
-    return task;
+
+    if (timerQueue_.empty()) {
+      threadLocker.unlock();
+      continue;
+    }
+    assert(!taskQueue_.empty());
+    TimerTask *header = timerQueue_.front();
+    nextTaskWhen = header->when;
+    if (microTime() > nextTaskWhen) {
+      timerQueue_.pop_front();
+      task = header;
+    } else {
+      threadLocker.unlock();
+      continue;
+    }
+    threadLocker.unlock();
+  }
+  return task;
 }
 
 void TimerQueue::removeTimer(int timerId) {
-    threadLocker.lock();
-    if (timerQueue_.empty()) {
-        threadLocker.unlock();
-        return;
-    } else {
-        for (std::deque<TimerTask *>::iterator it = timerQueue_.begin(); it < timerQueue_.end(); ++it) {
-            auto reference = *it;
-            if (reference->taskId == timerId) {
-                timerQueue_.erase(it);
-                weexTaskQueue->removeTimer(reference->taskId);
-                if (weexTaskQueue->weexRuntime){
-                    if (WeexEnv::getEnv()->isUseRunTimeApi()){
-                        weexTaskQueue->weexRuntime->removeTimerFunctionForRunTimeApi(reference->instanceID,reference->m_function,reference->from_instance_);
-                    } else{
-                        weexTaskQueue->weexRuntime->removeTimerFunction(reference->m_function, reference->global_object_);
-                    }
-                }
-
-                delete (reference);
-                reference = nullptr;
-            }
-        }
-    }
-
-    int size = timerQueue_.size();
-    if (size > 0) {
-        nextTaskWhen = timerQueue_.front()->when;
-    }
+  threadLocker.lock();
+  if (timerQueue_.empty()) {
     threadLocker.unlock();
-    threadLocker.signal();
+    return;
+  } else {
+    for (auto it = timerQueue_.begin(); it < timerQueue_.end(); ++it) {
+      auto reference = *it;
+      if (reference->taskId == timerId) {
+        timerQueue_.erase(it);
+        weexTaskQueue->removeTimer(reference->taskId);
+        if (weexTaskQueue->weexRuntime) {
+          weexTaskQueue->weexRuntime->removeTimerFunctionForRunTimeApi(reference->instanceID,
+                                                                       reference->m_function,
+                                                                       reference->from_instance_);
+        }
+
+        delete (reference);
+        reference = nullptr;
+      }
+    }
+  }
+
+  int size = timerQueue_.size();
+  if (size > 0) {
+    nextTaskWhen = timerQueue_.front()->when;
+  }
+  threadLocker.unlock();
+  threadLocker.signal();
 }
 
-void TimerQueue::destroyPageTimer(String instanceId) {
-    threadLocker.lock();
-    if (timerQueue_.empty()) {
-        threadLocker.unlock();
-        return;
-    } else {
-        for (std::deque<TimerTask *>::iterator it = timerQueue_.begin(); it < timerQueue_.end(); ++it) {
-            auto reference = *it;
-            if (reference->instanceID == instanceId) {
-                timerQueue_.erase(it);
-                weexTaskQueue->removeTimer(reference->taskId);
-                if (weexTaskQueue->weexRuntime){
-                    if (WeexEnv::getEnv()->isUseRunTimeApi()){
-                        weexTaskQueue->weexRuntime->removeTimerFunctionForRunTimeApi(reference->instanceID,reference->m_function,reference->from_instance_);
-                    } else{
-                        weexTaskQueue->weexRuntime->removeTimerFunction(reference->m_function, reference->global_object_);
-                    }
-                }
-
-                delete (reference);
-                reference = nullptr;
-            }
-        }
-    }
-
-    int size = timerQueue_.size();
-    if (size > 0) {
-        nextTaskWhen = timerQueue_.front()->when;
-    }
+void TimerQueue::destroyPageTimer(std::string instanceId) {
+  threadLocker.lock();
+  if (timerQueue_.empty()) {
     threadLocker.unlock();
-    threadLocker.signal();
+    return;
+  } else {
+    for (std::deque<TimerTask *>::iterator it = timerQueue_.begin(); it < timerQueue_.end(); ++it) {
+      auto reference = *it;
+      if (reference->instanceID == instanceId) {
+        timerQueue_.erase(it);
+        weexTaskQueue->removeTimer(reference->taskId);
+        if (weexTaskQueue->weexRuntime) {
+          weexTaskQueue->weexRuntime->removeTimerFunctionForRunTimeApi(reference->instanceID,
+                                                                       reference->m_function,
+                                                                       reference->from_instance_);
+        }
+
+        delete (reference);
+        reference = nullptr;
+      }
+    }
+  }
+
+  int size = timerQueue_.size();
+  if (size > 0) {
+    nextTaskWhen = timerQueue_.front()->when;
+  }
+  threadLocker.unlock();
+  threadLocker.signal();
 }

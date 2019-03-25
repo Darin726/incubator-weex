@@ -22,7 +22,7 @@
 
 #include "destory_instance_task.h"
 
-DestoryInstanceTask::DestoryInstanceTask(const String &instanceId) : WeexTask(instanceId) {}
+DestoryInstanceTask::DestoryInstanceTask(const std::string &instanceId) : WeexTask(instanceId) {}
 
 void DestoryInstanceTask::run(WeexRuntime *runtime) {
     runtime->destroyInstance(instanceId);

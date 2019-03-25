@@ -23,6 +23,7 @@
 #ifndef PROJECT_WEEX_RUNTIME_V2_H
 #define PROJECT_WEEX_RUNTIME_V2_H
 
+#include <core/bridge/script_bridge.h>
 #include "android/jsengine/weex_runtime.h"
 #include "weex_object_holder_v2.h"
 
@@ -30,83 +31,70 @@
 class WeexRuntimeV2 : public WeexRuntime {
 
 public:
-    explicit WeexRuntimeV2(TimerQueue *timeQueue, bool isMultiProgress);
 
     explicit WeexRuntimeV2(TimerQueue *timeQueue, WeexCore::ScriptBridge *script_bridge, bool isMultiProgress);
 
-    bool hasInstanceId(String &id) override;
+    bool hasInstanceId(std::string &id) override;
 
-    //int initFramework(IPCArguments *arguments) override;
 
-    int initFramework(const String &script, std::vector<INIT_FRAMEWORK_PARAMS *> &params) override;
-
-//    int initAppFrameworkMultiProcess(const String &instanceId, const String &appFramework,
-//                                     IPCArguments *arguments) override;
+    int initFramework(const std::string &script, std::vector<INIT_FRAMEWORK_PARAMS *> &params) override;
 
     int
-    initAppFramework(const String &instanceId, const String &appFramework,
+    initAppFramework(const std::string &instanceId, const std::string &appFramework,
                      std::vector<INIT_FRAMEWORK_PARAMS *> &params) override;
 
-    int createAppContext(const String &instanceId, const String &jsBundle) override;
+    int createAppContext(const std::string &instanceId, const std::string &jsBundle) override;
 
-    std::unique_ptr<WeexJSResult> exeJSOnAppWithResult(const String &instanceId, const String &jsBundle) override;
+    std::unique_ptr<WeexJSResult> exeJSOnAppWithResult(const std::string &instanceId, const std::string &jsBundle) override;
 
-    // int callJSOnAppContext(IPCArguments *arguments) override;
-
-    int
-    callJSOnAppContext(const String &instanceId, const String &func, std::vector<VALUE_WITH_TYPE *> &params) override;
-
-    int destroyAppContext(const String &instanceId) override;
-
-    int exeJsService(const String &source) override;
-
-    int exeCTimeCallback(const String &source) override;
-
-//    int exeJS(const String &instanceId, const String &nameSpace, const String &func, IPCArguments *arguments);
 
     int
-    exeJS(const String &instanceId, const String &nameSpace, const String &func,
+    callJSOnAppContext(const std::string &instanceId, const std::string &func, std::vector<VALUE_WITH_TYPE *> &params) override;
+
+    int destroyAppContext(const std::string &instanceId) override;
+
+    int exeJsService(const std::string &source) override;
+
+    int exeCTimeCallback(const std::string &source) override;
+
+
+    int
+    exeJS(const std::string &instanceId, const std::string &nameSpace, const std::string &func,
           std::vector<VALUE_WITH_TYPE *> &params) override;
 
-//    std::unique_ptr<WeexJSResult>  exeJSWithResult(const String &instanceId, const String &nameSpace, const String &func,
-//                          IPCArguments *arguments);
 
-    std::unique_ptr<WeexJSResult> exeJSWithResult(const String &instanceId, const String &nameSpace, const String &func,
+    std::unique_ptr<WeexJSResult> exeJSWithResult(const std::string &instanceId, const std::string &nameSpace, const std::string &func,
                                                   std::vector<VALUE_WITH_TYPE *> &params) override;
 
-    void exeJSWithCallback(const String &instanceId, const String &nameSpace, const String &func,
+    void exeJSWithCallback(const std::string &instanceId, const std::string &nameSpace, const std::string &func,
                            std::vector<VALUE_WITH_TYPE *> &params, long callback_id) override;
 
-    int createInstance(const String &instanceId, const String &func, const String &script, const String &opts,
-                       const String &initData, const String &extendsApi,
+    int createInstance(const std::string &instanceId, const std::string &func, const std::string &script, const std::string &opts,
+                       const std::string &initData, const std::string &extendsApi,
                        std::vector<INIT_FRAMEWORK_PARAMS *> &params) override;
 
-    std::unique_ptr<WeexJSResult> exeJSOnInstance(const String &instanceId, const String &script) override;
+    std::unique_ptr<WeexJSResult> exeJSOnInstance(const std::string &instanceId, const std::string &script) override;
 
-    int destroyInstance(const String &instanceId) override;
+    int destroyInstance(const std::string &instanceId) override;
 
-    int updateGlobalConfig(const String &config) override;
+    int updateGlobalConfig(const std::string &config) override;
 
-    int exeTimerFunction(const String &instanceId, uint32_t timerFunction, JSGlobalObject *globalObject) override;
+    WeexObjectHolderV2 *getLightAppObjectHolderV2(const std::string &instanceId);
 
-    WeexObjectHolder *getLightAppObjectHolder(const String &instanceId) override;
+    int exeTimerFunctionForRunTimeApi(const std::string &instanceId, uint32_t timerFunction, bool is_from_instance) override;
 
-    WeexObjectHolderV2 *getLightAppObjectHolderV2(const String &instanceId);
-
-    int exeTimerFunctionForRunTimeApi(const String &instanceId, uint32_t timerFunction, bool is_from_instance) override;
-
-    void removeTimerFunctionForRunTimeApi(const String &instanceId,const uint32_t timerFunction, bool is_from_instance) override;
+    void removeTimerFunctionForRunTimeApi(const std::string &instanceId,const uint32_t timerFunction, bool is_from_instance) override;
 
 
 protected:
-    int _initFrameworkWithScript(const String &source);
+    int _initFrameworkWithScript(const std::string &source);
 
-    int _initAppFrameworkWithScript(const String &instanceId, const String &appFramework);
+    int _initAppFrameworkWithScript(const std::string &instanceId, const std::string &appFramework);
 
     void _geJSRuntimeArgsFromWeexParams(unicorn::EngineContext *context, std::vector<unicorn::ScopeValues> *obj,
                                         std::vector<VALUE_WITH_TYPE *> &params);
 
-    WeexGlobalObjectV2* findWeexObj(const String &instanceId, bool is_instance);
+    WeexGlobalObjectV2* findWeexObj(const std::string &instanceId, bool is_instance);
 
 
 protected:

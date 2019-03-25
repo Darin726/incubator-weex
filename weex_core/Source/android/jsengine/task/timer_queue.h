@@ -37,7 +37,7 @@ class TimerQueue {
 public:
     void init();
 
-    void destroyPageTimer(String instanceId);
+    void destroyPageTimer(std::string instanceId);
 
     void removeTimer(int timerId);
 

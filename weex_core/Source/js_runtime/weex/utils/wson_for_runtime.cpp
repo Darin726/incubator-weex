@@ -20,16 +20,23 @@
 // Created by 陈佩翰 on 2019/2/25.
 //
 
-#include <include/wtf/icu/unicode/utf.h>
-#include <include/wtf/text/WTFString.h>
+#include <wson_util.h>
 #include "wson/wson.h"
 #include "wson/wson_parser.h"
-
 #include "wson_for_runtime.h"
-
+#include "base/string_util.h"
 
 #include "js_runtime/utils/log_utils.h"
 
+
+
+inline static std::string wson16ToString(uint16_t *src, int length) {
+    std::string str;
+    auto * decodeBuffer = new char[length * 2];
+    wson::utf16_convert_to_utf8_string(src, length/sizeof(uint16_t), decodeBuffer, str);
+    delete []decodeBuffer;
+    return str;
+}
 
 namespace wson {
 
@@ -49,13 +56,10 @@ namespace wson {
             case WSON_NUMBER_BIG_INT_TYPE:
             case WSON_NUMBER_BIG_DECIMAL_TYPE: {
                 LOG_CONVERSION("[toRunTimeValueFromWson][string_utf_16][start]");
-                uint32_t length = wson_next_uint(buffer);
-                UChar *destination;
-                WTF::String s = WTF::String::createUninitialized(length / sizeof(UChar), destination);
-                void *src = wson_next_bts(buffer, length);
-                memcpy(destination, src, length);
-                std::string string_utf_8 = std::string(s.utf8().data());
-                LOG_CONVERSION("[toRunTimeValueFromWson][string_utf_16][end] :%s", s.utf8().data());
+                int length = wson_next_uint(buffer);
+                uint16_t * utf16 = ( uint16_t *)wson_next_bts(buffer, length);
+                std::string string_utf_8 = wson16ToString(utf16,length);
+//                LOGE("dyydyy [toRunTimeValueFromWson][string_utf_16][end] :%s", string_utf_8.c_str());
                 return new unicorn::RuntimeValues(string_utf_8);
             }
                 break;
@@ -81,13 +85,9 @@ namespace wson {
                                                                                            unicorn::RuntimeValues::MakeNull());
                 for (uint32_t i = 0; i < length; i++) {
                     if (wson_has_next(buffer)) {
-                        int propertyLength = wson_next_uint(buffer);
-                        UChar *destination;
-                        WTF::String name_utf_16 = WTF::String::createUninitialized(propertyLength / sizeof(UChar),
-                                                                                   destination);
-                        void *name = wson_next_bts(buffer, propertyLength);
-                        memcpy(destination, name, propertyLength);
-                        std::string name_utf_8 = std::string(name_utf_16.utf8().data());
+                        int length = wson_next_uint(buffer);
+                        uint16_t * utf16 = ( uint16_t *)wson_next_bts(buffer, length);
+                        std::string name_utf_8 = wson16ToString(utf16,length);
                         LOG_CONVERSION("[toRunTimeValueFromWson][map][itemkey] :%s", name_utf_8.c_str());
                         runtime_map->Insert(name_utf_8, convertWsonToRuntimeValue(context, buffer));
 
@@ -154,51 +154,18 @@ namespace wson {
     }
 
     void pushStringToWsonBuffer(wson_buffer *buffer, std::string str_utf_8) {
-        WTF::String wtf_str = WTF::String::fromUTF8(str_utf_8.c_str());
-
-        size_t length = wtf_str.length();
-        if (wtf_str.is8Bit()) {
-            // Convert latin1 chars to unicode.
-            wson_push_type(buffer, WSON_STRING_TYPE);
-            wson_push_uint(buffer, length * sizeof(UChar));
-            wson_buffer_require(buffer, length * sizeof(UChar));
-            UChar *jchars = (UChar *) ((uint8_t *) buffer->data + buffer->position);
-            for (unsigned i = 0; i < length; i++) {
-//#ifdef __ANDROID__
-//                    jchars[i] = s.at(i);
-//#else
-                jchars[i] = wtf_str.characterAt(i);
-//#endif
-            }
-            buffer->position += length * sizeof(UChar);
-        } else {
-            wson_push_type(buffer, WSON_STRING_TYPE);
-            wson_push_uint(buffer, length * sizeof(UChar));
-            wson_push_bytes(buffer, wtf_str.characters16(), wtf_str.length() * sizeof(UChar));
-        }
+        std::u16string s = weex::base::to_utf16(const_cast<char *>(str_utf_8.c_str()), str_utf_8.length());
+        size_t length = s.length();
+        wson_push_type(buffer, WSON_STRING_TYPE);
+        wson_push_uint(buffer, length * sizeof(uint16_t));
+        wson_push_bytes(buffer, s.c_str(), s.length() * sizeof(uint16_t));
     }
 
     void pushMapKeyToBuffer(wson_buffer *buffer, std::string str_utf_8) {
-        WTF::String wtf_str = WTF::String::fromUTF8(str_utf_8.c_str());
-
-        size_t length = wtf_str.length();
-        if (wtf_str.is8Bit()) {
-            // Convert latin1 chars to unicode.
-            wson_push_uint(buffer, length * sizeof(UChar));
-            wson_buffer_require(buffer, length * sizeof(UChar));
-            UChar *jchars = (UChar *) ((uint8_t *) buffer->data + buffer->position);
-            for (unsigned i = 0; i < length; i++) {
-//#ifdef __ANDROID__
-//                    jchars[i] = s.at(i);
-//#else
-                jchars[i] = wtf_str.characterAt(i);
-//#endif
-            }
-            buffer->position += length * sizeof(UChar);
-        } else {
-            wson_push_uint(buffer, length * sizeof(UChar));
-            wson_push_bytes(buffer, wtf_str.characters16(), wtf_str.length() * sizeof(UChar));
-        }
+      std::u16string s = weex::base::to_utf16(const_cast<char *>(str_utf_8.c_str()), str_utf_8.length());
+      size_t length = s.length();
+      wson_push_uint(buffer, length * sizeof(uint16_t));
+      wson_push_bytes(buffer, s.c_str(), s.length() * sizeof(uint16_t));
     }
 
 

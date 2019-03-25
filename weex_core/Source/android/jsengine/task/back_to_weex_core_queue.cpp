@@ -23,6 +23,7 @@
 #include <base/android/log_utils.h>
 #include <object/weex_env.h>
 #include "back_to_weex_core_queue.h"
+#include "third_party/IPC/Buffering/IPCBuffer.h"
 
 
 static void *startThread(void *td) {

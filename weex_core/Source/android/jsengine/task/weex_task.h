@@ -24,8 +24,9 @@
 #define WEEXV8_WEEXTASK_H
 
 #include "base/time_calculator.h"
-#include "android/jsengine/weex_runtime.h"
 #include "base/utils/ThreadLocker.h"
+#include "android/jsengine/weex_jsc_utils.h"
+#include "android/jsengine/weex_runtime.h"
 
 class WeexTask {
 
@@ -49,15 +50,15 @@ public:
         ThreadLocker thread_locker_;
     };
 
-    String instanceId;
+    std::string instanceId;
     int taskId;
-    explicit WeexTask(const String &instanceId, int taskId) : future_(nullptr), global_object_(nullptr) {
+    explicit WeexTask(const std::string &instanceId, int taskId) : future_(nullptr) {
         this->instanceId = instanceId;
         this->taskId = taskId;
-        this->timeCalculator = new weex::base::TimeCalculator(weex::base::TaskPlatform::JSS_ENGINE, "", this->instanceId.utf8().data());
+        this->timeCalculator = new weex::base::TimeCalculator(weex::base::TaskPlatform::JSS_ENGINE, "", this->instanceId);
     };
 
-    explicit WeexTask(const String &instanceId) : WeexTask(instanceId, genTaskId()) {};
+    explicit WeexTask(const std::string &instanceId) : WeexTask(instanceId, genTaskId()) {};
 
     virtual ~WeexTask() {if(timeCalculator != nullptr) delete timeCalculator;};
 
@@ -72,20 +73,11 @@ public:
         return future_;
     }
 
-    inline WeexGlobalObject* global_object() {
-        return global_object_;
-    }
-
-    inline void set_global_object(WeexGlobalObject* global_object) {
-        global_object_ = global_object;
-    }
-
     weex::base::TimeCalculator *timeCalculator;
 
     bool is_from_instance = true;
 private:
     Future* future_;
-    WeexGlobalObject* global_object_;
 };
 
 

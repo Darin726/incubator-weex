@@ -220,27 +220,27 @@ public class WXSoInstallMgrSdk {
 
         String jsbVersionFile = "jsb.version";
 
-        File versionFile = new File(cacheFile,jsbVersionFile);
-        Closeable r = null;
-
-        if(newfile.exists() && versionFile.exists()) {
-          try {
-            FileReader fileReader = new FileReader(versionFile);
-            r = fileReader;
-            BufferedReader br = new BufferedReader(fileReader);
-            String s = br.readLine();
-            if(!TextUtils.isEmpty(s)) {
-              boolean same = String.valueOf(WXEnvironment.CORE_JSB_SO_VERSION).equals(s.trim());
-              if(same)
-                return;
-            }
-          } catch (FileNotFoundException e) {
-            //do nothing and copy so file
-          } finally {
-            if (r != null)
-              r.close();
-          }
-        }
+//        File versionFile = new File(cacheFile,jsbVersionFile);
+//        Closeable r = null;
+//
+//        if(newfile.exists() && versionFile.exists()) {
+//          try {
+//            FileReader fileReader = new FileReader(versionFile);
+//            r = fileReader;
+//            BufferedReader br = new BufferedReader(fileReader);
+//            String s = br.readLine();
+//            if(!TextUtils.isEmpty(s)) {
+//              boolean same = String.valueOf(WXEnvironment.CORE_JSB_SO_VERSION).equals(s.trim());
+//              if(same)
+//                return;
+//            }
+//          } catch (FileNotFoundException e) {
+//            //do nothing and copy so file
+//          } finally {
+//            if (r != null)
+//              r.close();
+//          }
+//        }
 
         String path = "/data/data/" + pkgName + "/lib";
         if (cacheFile != null && cacheFile.indexOf("/cache") > 0) {
@@ -256,25 +256,26 @@ public class WXSoInstallMgrSdk {
 
         File oldfile = new File(soName);
         if (oldfile.exists()) {
+          oldfile.delete();
           WXFileUtils.copyFile(oldfile, newfile);
         } else {
           WXEnvironment.extractSo();
         }
 
         Closeable w = null;
-        try {
-          if(!versionFile.exists())
-            versionFile.createNewFile();
-          FileWriter fileWriter = new FileWriter(versionFile);
-          w = fileWriter;
-          fileWriter.write(String.valueOf(WXEnvironment.CORE_JSB_SO_VERSION));
-          fileWriter.flush();
-        } catch (Exception e ) {
-          // do nothing
-        } finally {
-          if(w != null)
-            w.close();
-        }
+//        try {
+//          if(!versionFile.exists())
+//            versionFile.createNewFile();
+//          FileWriter fileWriter = new FileWriter(versionFile);
+//          w = fileWriter;
+//          fileWriter.write(String.valueOf(WXEnvironment.CORE_JSB_SO_VERSION));
+//          fileWriter.flush();
+//        } catch (Exception e ) {
+//           do nothing
+//        } finally {
+//          if(w != null)
+//            w.close();
+//        }
 
       }
     } catch (Throwable e) {

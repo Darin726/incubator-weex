@@ -163,15 +163,12 @@ namespace weex {
                 }
                 case ParamsType::STRING: {
                     WeexString *ipcstr = paramsObject->value.string;
-                    const String &string2String = weexString2String(ipcstr);
-                    // LOG_CONVERSION("WeexValueToRuntimeValue string :%s", string2String.utf8().data());
-                    return unicorn::RuntimeValues::MakeString(std::string(string2String.utf8().data()));
+                   // LOG_CONVERSION("WeexValueToRuntimeValue string :%s", string2String.utf8().data());
+                    return unicorn::RuntimeValues::MakeString(weexString2String(ipcstr));
                 }
                 case ParamsType::JSONSTRING: {
                     const WeexString *ipcJsonStr = paramsObject->value.string;
-                    const String &string = weexString2String(ipcJsonStr);
-                    LOG_CONVERSION("WeexValueToRuntimeValue JSONSTRING length:%d", string.length());
-                    auto res = unicorn::RuntimeValues::MakeObjectFromJsonStr(std::string(string.utf8().data()));
+                    auto res = unicorn::RuntimeValues::MakeObjectFromJsonStr(weexString2String(ipcJsonStr));
                     LOG_CONVERSION("WeexValueToRuntimeValue JSONSTRING succeed");
                     return res;
                 }
@@ -189,9 +186,7 @@ namespace weex {
                     return wson::toRunTimeValueFromWson(context, (void *) array->content, array->length);
                 }
                 default:
-                    //obj->append(jsUndefined());
-                    //  break;
-                    LOGE("WeexValueToRuntimeValue unkonw value type :%d", paramsObject->type);
+                    LOGE("WeexValueToRuntimeValue unkonw value type :%d",paramsObject->type);
                     return unicorn::RuntimeValues::MakeUndefined();
             }
         }

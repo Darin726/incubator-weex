@@ -23,11 +23,10 @@
 #include "android/jsengine/object/weex_env.h"
 #include "android/jsengine/weex_runtime.h"
 #include "core/manager/weex_core_manager.h"
-
-using namespace JSC;
-using namespace WTF;
-using namespace WEEXICU;
-
+#include "base/crash/crash_handler.h"
+#include <unistd.h>
+#include <sys/mman.h>
+using namespace crash_handler;
 
 struct WeexJSServer::WeexJSServerImpl {
     WeexJSServerImpl(int serverFd, int clientFd, bool enableTrace, std::string crashFileName);

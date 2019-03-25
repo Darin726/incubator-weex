@@ -22,7 +22,7 @@
 
 #include "exe_js_services_task.h"
 
-ExeJsServicesTask::ExeJsServicesTask(const String &script) : WeexTask("") {
+ExeJsServicesTask::ExeJsServicesTask(const std::string &script) : WeexTask("") {
     this->script = script;
 }
 

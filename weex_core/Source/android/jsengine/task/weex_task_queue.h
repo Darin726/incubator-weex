@@ -40,9 +40,9 @@ public:
 
     void removeTimer(int taskId);
 
-    void removeAllTask(String id);
+    void removeAllTask(const std::string &id);
 
-    int addTimerTask(String id, uint32_t function, int taskId, WeexGlobalObject* global_object, bool one_shot, bool is_from_instance);
+    int addTimerTask(const std::string &id, uint32_t function, int taskId, bool one_shot, bool is_from_instance);
 
     void start();
 

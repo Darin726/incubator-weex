@@ -22,7 +22,7 @@
 
 #include "ctime_callback_task.h"
 
-CTimeCallBackTask::CTimeCallBackTask(const String &script) : WeexTask("") {}
+CTimeCallBackTask::CTimeCallBackTask(const std::string &script) : WeexTask("") {}
 
 void CTimeCallBackTask::run(WeexRuntime *runtime) {
     runtime->exeCTimeCallback(script);

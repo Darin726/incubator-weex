@@ -39,6 +39,7 @@
 #include <vector>
 #include "js_runtime/runtime/engine_context.h"
 #include "js_runtime/runtime/runtime_values.h"
+#include "include/JavaScriptCore/JSObjectRef.h"
 
 namespace unicorn {
 

@@ -31,16 +31,10 @@ class InitFrameworkTask : public WeexTask {
 public:
 
 
-    explicit InitFrameworkTask(const String &instanceId, const String &script,
+    explicit InitFrameworkTask(const std::string &instanceId, const std::string &script,
                                std::vector<INIT_FRAMEWORK_PARAMS *> &params);
 
-    explicit InitFrameworkTask(const String &script, std::vector<INIT_FRAMEWORK_PARAMS *> &params);
-
-
-    explicit InitFrameworkTask(const String &instanceId, const String &script, IPCArguments *arguments,
-                               size_t startCount);
-
-    explicit InitFrameworkTask(const String &script, IPCArguments *arguments, size_t startCount);
+    explicit InitFrameworkTask(const std::string &script, std::vector<INIT_FRAMEWORK_PARAMS *> &params);
 
     void run(WeexRuntime *runtime) override;
 
@@ -52,7 +46,7 @@ public:
 
 private:
     InitFrameworkArgs *args;
-    String script;
+    std::string script;
 };
 
 

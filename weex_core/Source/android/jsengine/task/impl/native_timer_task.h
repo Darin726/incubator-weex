@@ -27,7 +27,7 @@
 
 class NativeTimerTask : public WeexTask {
 public:
-    explicit NativeTimerTask(const String &instanceId, uint32_t function, int taskId, bool one_shot);
+    explicit NativeTimerTask(const std::string &instanceId, uint32_t function, int taskId, bool one_shot);
     ~NativeTimerTask() override {}
 
     void run(WeexRuntime *runtime) override;

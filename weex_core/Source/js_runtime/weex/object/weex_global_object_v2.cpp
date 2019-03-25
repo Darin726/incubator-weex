@@ -20,6 +20,9 @@
 // Created by 陈佩翰 on 2019/2/22.
 //
 
+#include <core/bridge/script_bridge.h>
+#include "weex_jsc_utils.h"
+#include "core/bridge/script_bridge.h"
 #include "js_runtime/weex/binding/weex_global_binding.h"
 #include "js_runtime/weex/binding/weex_instance_binding.h"
 #include "js_runtime/weex/binding/app_context_binding.h"
@@ -80,8 +83,6 @@ void WeexGlobalObjectV2::addExtraOptions(std::vector<INIT_FRAMEWORK_PARAMS *> &p
     }
     std::unique_ptr<unicorn::Map> wxExtraOption = unicorn::Map::CreateFromNative(this->context->GetEngineContext(),
                                                                                  unicorn::RuntimeValues::MakeNull());
-//    VM &vm = this->vm();
-//    JSNonFinalObject *WXExtraOption = SimpleObject::create(vm, this);
     for (int i = 0; i < params.size(); i++) {
         INIT_FRAMEWORK_PARAMS *param = params[i];
         wxExtraOption->Insert(
@@ -89,9 +90,6 @@ void WeexGlobalObjectV2::addExtraOptions(std::vector<INIT_FRAMEWORK_PARAMS *> &p
                 new unicorn::RuntimeValues(param->value->content, param->value->length)
         );
 
-//        String &&type = String::fromUTF8(param->type->content);
-//        String &&value = String::fromUTF8(param->value->content);
-//        addString(vm, WXExtraOption, param->type->content, WTFMove(value));
     }
     this->context->GetEngineContext()->SetGlobalPropertyValue(
             std::string("WXExtraOption"),
@@ -106,8 +104,8 @@ WeexGlobalObjectV2::initWxEnvironment(std::vector<INIT_FRAMEWORK_PARAMS *> &para
     for (int i = 0; i < params.size(); i++) {
         INIT_FRAMEWORK_PARAMS *param = params[i];
 
-        String &&type = String::fromUTF8(param->type->content);
-        String &&value = String::fromUTF8(param->value->content);
+        std::string &&type = std::string(param->type->content);
+        std::string &&value = std::string(param->value->content);
         if (isSave) {
             auto init_framework_params = (INIT_FRAMEWORK_PARAMS *) malloc(sizeof(INIT_FRAMEWORK_PARAMS));
 
@@ -123,8 +121,8 @@ WeexGlobalObjectV2::initWxEnvironment(std::vector<INIT_FRAMEWORK_PARAMS *> &para
         }
 
         if (!isGlobalConfigStartUpSet) {
-            if (strncmp(type.utf8().data(), WX_GLOBAL_CONFIG_KEY, strlen(WX_GLOBAL_CONFIG_KEY)) == 0) {
-                const char *config = value.utf8().data();
+            if (strncmp(type.c_str(), WX_GLOBAL_CONFIG_KEY, strlen(WX_GLOBAL_CONFIG_KEY)) == 0) {
+                const char *config = value.c_str();
                 doUpdateGlobalSwitchConfig(config);
             }
             isGlobalConfigStartUpSet = true;
@@ -132,16 +130,16 @@ WeexGlobalObjectV2::initWxEnvironment(std::vector<INIT_FRAMEWORK_PARAMS *> &para
 
         // --------------------------------------------------------
         // add for debug mode
-        if (String("debugMode") == type && String("true") == value) {
+        if (std::string("debugMode") == type && std::string("true") == value) {
             Weex::LogUtil::setDebugMode(true);
         }
         // --------------------------------------------------------
 
-        //LOGE("initWxEnvironment and value is %s", value.utf8().data());
-        // addString(vm, WXEnvironment, param->type->content, WTFMove(value));
-        //LOGD("initWxEnvironment initWxEnvironment  key:%s ,vaule: %s", type.utf8().data(), value.utf8().data());
-        wxEnvironment->Insert(std::string(type.utf8().data()),
-                              new unicorn::RuntimeValues(std::string(value.utf8().data())));
+        //LOGE("initWxEnvironment and value is %s", value.c_str());
+        // addstd::string(vm, WXEnvironment, param->type->content, WTFMove(value));
+        //LOGD("initWxEnvironment initWxEnvironment  key:%s ,vaule: %s", type.c_str(), value.c_str());
+        wxEnvironment->Insert(std::string(type.c_str()),
+                              new unicorn::RuntimeValues(std::string(value.c_str())));
         //free(params);
     }
     const char *key = object_type_ == AppWorker ? "__windmill_environment__" : "WXEnvironment";
@@ -209,8 +207,8 @@ int WeexGlobalObjectV2::setNativeTimeout(unicorn::RuntimeValues *func, int timeO
     }
     LOG_WEEX_BINDING("WeexBindingUtils setNativeTimeout timeOut :%d , type:%d", timeOut, func->GetType());
 
-    TimerTask *task = new TimerTask(WTF::String::fromUTF8(this->id.c_str()), function_id_,
-                                    timeOut, nullptr, interval);
+    TimerTask *task = new TimerTask(this->id.c_str(), function_id_,
+                                    timeOut, interval);
     if (this->getObjectType() == WeexInstance){
         task ->from_instance_ = true;
     } else {

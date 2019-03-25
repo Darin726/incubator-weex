@@ -28,13 +28,13 @@
 
 class ExeJsServicesTask :public  WeexTask {
 public:
-    explicit ExeJsServicesTask(const String &script);
+    explicit ExeJsServicesTask(const std::string &script);
 
      void run(WeexRuntime *runtime) override ;
      std::string taskName() override { return " ExeJsServicesTask"; }
 
 private:
-    String script;
+    std::string script;
 
 };
 

@@ -64,23 +64,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${WEEX_CORE_SOURCE_DIR})
 include_directories(${WEEX_CORE_SOURCE_DIR}/include)
 include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/API)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/ForwardingHeaders)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/assembler)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/bytecode)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/dfg)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/disassembler)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/domjit)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/runtime)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/heap)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/jit)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/interpreter)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/parser)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/profiler)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/JavaScriptCore/yarr)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/wtf/icu)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/wtf/text)
-include_directories(${WEEX_CORE_SOURCE_DIR}/include/wtf)
 #include_directories(${WEEX_CORE_SOURCE_DIR}/android/jsengine/dependence/WTF/)
 #include_directories(${WEEX_CORE_SOURCE_DIR}/android/jsengine/dependence/icu)
 
@@ -155,8 +138,6 @@ set(${WEEXJSSERVER_NAME}_SOURCES
         weex_ipc_server.cpp
         weex_jsc_utils.h
         weex_jsc_utils.cpp
-        weex_runtime.h
-        weex_runtime.cpp
 
         bridge/script/script_bridge_in_multi_so.cpp
         bridge/script/script_bridge_in_multi_process.cpp
@@ -169,16 +150,8 @@ set(${WEEXJSSERVER_NAME}_SOURCES
         object/args/init_framework_args.cpp
         object/args.h
         object/args.cpp
-        object/weex_console_object.h
-        object/weex_console_object.cpp
         object/weex_env.h
         object/weex_env.cpp
-        object/weex_global_object.h
-        object/weex_global_object.cpp
-        object/weex_object_holder.h
-        object/weex_object_holder.cpp
-        object/weex_simple_object.h
-        object/weex_simple_object.cpp
 
         task/impl/init_framework_task.cpp
         task/impl/create_app_context_task.cpp
@@ -200,8 +173,6 @@ set(${WEEXJSSERVER_NAME}_SOURCES
         task/timer_queue.cpp
         task/back_to_weex_core_queue.cpp
 
-        wson/wson_jsc.h
-        wson/wson_jsc.cpp
       #  ${JS_RUNTIME_API_SRCS}
         ${JS_RUNTIME_API_SRCS}
         ${DOM_API_SRCS}
@@ -238,12 +209,13 @@ endif()
 
 set(${WEEXJSSERVER_NAME}_LIBRARY_TYPE SHARED)
 
+message("${LOCAL_LIBRARIES_DIR}")
 set(${WEEXJSSERVER_NAME}_LIBRARIES
 weexbase
 weexipc
 wson
-JavaScriptCore
-WTF
+c++_shared
+jsc
 log
 z
 -lc

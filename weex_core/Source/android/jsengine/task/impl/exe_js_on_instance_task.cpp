@@ -22,7 +22,7 @@
 
 #include "exe_js_on_instance_task.h"
 
-ExeJsOnInstanceTask::ExeJsOnInstanceTask(const String &instanceId, const String &script) : WeexTask(
+ExeJsOnInstanceTask::ExeJsOnInstanceTask(const std::string &instanceId, const std::string &script) : WeexTask(
         instanceId) {
     this->script = script;
 }

@@ -28,7 +28,7 @@
 
 class TakeHeapSnapShot : public WeexTask {
 public:
-    TakeHeapSnapShot(const String &instanceId);
+    TakeHeapSnapShot(const std::string &instanceId);
 
     void run(WeexRuntime *runtime) override ;
 

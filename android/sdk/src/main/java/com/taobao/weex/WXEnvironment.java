@@ -115,11 +115,11 @@ public class WXEnvironment {
 
   public static final String CORE_SO_NAME = "weexcore";
   public static final String CORE_JSS_SO_NAME = "weexjss";
-  public static final String CORE_JSC_SO_NAME = "JavaScriptCore";
+  public static final String CORE_JSC_SO_NAME = "jsc";
   /**
    * this marked jsb.so's version, Change this if we want to update jsb.so
    */
-  public static final int CORE_JSB_SO_VERSION = 1;
+  public static final int CORE_JSB_SO_VERSION = 2;
 
   private static  String CORE_JSS_SO_PATH = null;
 

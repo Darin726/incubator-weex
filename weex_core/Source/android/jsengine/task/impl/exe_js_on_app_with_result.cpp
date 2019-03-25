@@ -22,7 +22,7 @@
 
 #include "exe_js_on_app_with_result.h"
 
-ExeJsOnAppWithResultTask::ExeJsOnAppWithResultTask(const String &instanceId, const String &script) : WeexTask(
+ExeJsOnAppWithResultTask::ExeJsOnAppWithResultTask(const std::string &instanceId, const std::string &script) : WeexTask(
         instanceId) {
     this->script = script;
 }

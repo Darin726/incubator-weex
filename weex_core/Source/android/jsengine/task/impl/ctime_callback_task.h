@@ -28,13 +28,13 @@
 
 class CTimeCallBackTask :public  WeexTask{
 public:
-    CTimeCallBackTask(const String &script);
+    CTimeCallBackTask(const std::string &script);
 
     void run(WeexRuntime *runtime) override;
     std::string taskName() override { return "CTimeCallBackTask"; }
 
 private:
-    String script;
+    std::string script;
 
 };
 

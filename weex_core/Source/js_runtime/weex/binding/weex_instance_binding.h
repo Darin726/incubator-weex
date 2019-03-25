@@ -27,6 +27,7 @@
 #include "js_runtime/runtime/binding_macro.h"
 #include "weex_console_binding.h"
 
+
 class WeexGlobalObjectV2;
 
 namespace weex {

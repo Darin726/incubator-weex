@@ -18,10 +18,9 @@
 
 #include <string>
 #include <vector>
-#include <include/wtf/text/WTFString.h>
-#include <include/JavaScriptCore/API/APICast.h>
-#include <include/JavaScriptCore/runtime/LiteralParser.h>
-#include <include/JavaScriptCore/runtime/JSONObject.h>
+#include <include/JavaScriptCore/JSBase.h>
+#include <include/JavaScriptCore/JSStringRef.h>
+#include <include/JavaScriptCore/JSValueRef.h>
 
 #include "js_runtime/runtime/jsc/runtime_values_jsc.h"
 #include "js_runtime/runtime/runtime_object.h"

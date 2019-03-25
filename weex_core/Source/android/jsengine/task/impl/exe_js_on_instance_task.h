@@ -28,13 +28,13 @@
 
 class ExeJsOnInstanceTask: public WeexTask {
 public:
-    explicit ExeJsOnInstanceTask(const String &instanceId, const String &script);
+    explicit ExeJsOnInstanceTask(const std::string &instanceId, const std::string &script);
 
     void run(WeexRuntime *runtime) override;
     std::string taskName() override { return "ExeJsOnInstanceTask"; }
 
 private:
-    String script;
+    std::string script;
 };
 
 

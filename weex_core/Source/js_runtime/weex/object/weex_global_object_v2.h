@@ -24,8 +24,9 @@
 #define PROJECT_WEEX_GLOBAL_OBJECT_V2_H
 
 
-#include <include/WeexApiHeader.h>
-#include <task/timer_queue.h>
+#include "core/bridge/script_bridge.h"
+#include "include/WeexApiHeader.h"
+#include "task/timer_queue.h"
 #include "js_runtime/runtime/runtime_context.h"
 #include "js_runtime/runtime/runtime_object.h"
 

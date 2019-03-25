@@ -22,7 +22,7 @@
 
 #include "destory_app_context_task.h"
 
-DestoryAppContextTask::DestoryAppContextTask(const String &instanceId) : WeexTask(instanceId) {}
+DestoryAppContextTask::DestoryAppContextTask(const std::string &instanceId) : WeexTask(instanceId) {}
 
 void DestoryAppContextTask::run(WeexRuntime *runtime) {
     runtime->destroyAppContext(instanceId);

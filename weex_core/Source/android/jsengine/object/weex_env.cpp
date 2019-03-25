@@ -51,20 +51,19 @@ void WeexEnv::initJSC(bool isMultiProgress) {
           LOGE("failed to init ICUEnv single process");
           // return false;
       }
-
-      if(WeexEnv::getEnv()->isUseRunTimeApi()){
-          WTF::initializeMainThread();
-          initHeapTimer();
-      } else{
-          Options::enableRestrictedOptions(true);
-// Initialize JSC before getting VM.
-          WTF::initializeMainThread();
-          initHeapTimer();
-          JSC::initializeThreading();
-#if ENABLE(WEBASSEMBLY)
-          JSC::Wasm::enableFastMemory();
-#endif
-      }
+//      if(WeexEnv::getEnv()->isUseRunTimeApi()){
+//          WTF::initializeMainThread();
+//          initHeapTimer();
+//      } else{
+//          Options::enableRestrictedOptions(true);
+//// Initialize JSC before getting VM.
+//          WTF::initializeMainThread();
+//          initHeapTimer();
+//          JSC::initializeThreading();
+//#if ENABLE(WEBASSEMBLY)
+//          JSC::Wasm::enableFastMemory();
+//#endif
+//      }
     });
 }
 void WeexEnv::init_crash_handler(std::string crashFileName) {
@@ -85,5 +84,5 @@ void WeexEnv::set_m_cache_task_(volatile bool m_cache_task_) {
   WeexEnv::m_cache_task_ = m_cache_task_;
 }
 WeexEnv::~WeexEnv() {
-  wson::destory();
+//  wson::destory();
 }

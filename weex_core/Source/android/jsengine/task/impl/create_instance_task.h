@@ -28,17 +28,17 @@
 
 class CreateInstanceTask : public WeexTask {
 public:
-    CreateInstanceTask(const String &instanceId, const String &script, std::vector<INIT_FRAMEWORK_PARAMS*>& params);
+    CreateInstanceTask(const std::string &instanceId, const std::string &script, std::vector<INIT_FRAMEWORK_PARAMS*>& params);
 
-    void addExtraArg(String arg);
+    void addExtraArg(std::string arg);
 
     void run(WeexRuntime *runtime) override ;
     std::string taskName() override { return "CreateInstanceTask"; }
 
 private:
-    std::vector<String> extraArgs;
+    std::vector<std::string> extraArgs;
     std::unique_ptr<InitFrameworkArgs> initExtraArgs;
-    String script;
+    std::string script;
 };
 
 

@@ -23,14 +23,10 @@
 #ifndef PROJECT_APP_INSTANCE_BINDING_H
 #define PROJECT_APP_INSTANCE_BINDING_H
 
-
-#include <object/weex_global_object.h>
-
 #include "js_runtime/runtime/binding_macro.h"
 #include "weex_console_binding.h"
 
 class WeexGlobalObjectV2;
-
 
 namespace weex {
     namespace jsengine {

@@ -22,11 +22,11 @@
 
 #include "create_instance_task.h"
 
-void CreateInstanceTask::addExtraArg(String arg) {
+void CreateInstanceTask::addExtraArg(std::string arg) {
     extraArgs.push_back(arg);
 }
 
-CreateInstanceTask::CreateInstanceTask(const String &instanceId, const String &script, std::vector<INIT_FRAMEWORK_PARAMS*>& params) : WeexTask(instanceId) {
+CreateInstanceTask::CreateInstanceTask(const std::string &instanceId, const std::string &script, std::vector<INIT_FRAMEWORK_PARAMS*>& params) : WeexTask(instanceId) {
     this->script = script;
     initExtraArgs.reset(new InitFrameworkArgs(params));
 }

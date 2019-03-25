@@ -25,7 +25,6 @@
 
 #include <vector>
 #include "include/WeexApiHeader.h"
-#include "include/wtf/text/WTFString.h"
 #include "third_party/IPC/IPCArguments.h"
 
 class InitFrameworkArgs {

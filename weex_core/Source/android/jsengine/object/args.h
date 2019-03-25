@@ -24,7 +24,6 @@
 #define ARGS_H
 
 #include <string>
-#include <wtf/text/WTFString.h>
 
 #include "wson/wson.h"
 
@@ -43,11 +42,11 @@ namespace WeexCore {
                 return type;
             };
 
-            void setString(String& string){
+            void setString(std::string& string){
                 this->json = string;
                 this->type = ARGS_TYPE_JSON;
                 // if string is not utf8, we convert it
-                utf8.assign(json.utf8().data());
+                utf8.assign(json.c_str());
             }
             /**object will auto free when args destructor */
             void setWson(wson_buffer* buffer){
@@ -73,14 +72,14 @@ namespace WeexCore {
                     }
                     return 0;
                 }else{
-                    return strlen(json.utf8().data());
+                    return strlen(json.c_str());
                 }
             }
 
         private:
             int type; 
         public:
-            String json;
+      std::string json;
             std::string utf8;
             wson_buffer* wson = nullptr;
      };

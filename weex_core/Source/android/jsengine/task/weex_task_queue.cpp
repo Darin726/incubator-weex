@@ -78,10 +78,10 @@ WeexTask *WeexTaskQueue::getTask() {
     return task;
 }
 
-int WeexTaskQueue::addTimerTask(String id, uint32_t function, int taskId, WeexGlobalObject* global_object, bool one_shot, bool is_from_instance) {
+int WeexTaskQueue::addTimerTask(const std::string &id, uint32_t function, int taskId,  bool one_shot, bool is_from_instance) {
     //LOGE("[weex-binding ]addTimerTask  on ==> taskquene %d",taskId);
     WeexTask *task = new NativeTimerTask(id, function,taskId, one_shot);
-    task->set_global_object(global_object);
+    //task->set_global_object(global_object);
     task->is_from_instance = is_from_instance;
     return _addTask(
             task,
@@ -127,7 +127,6 @@ static void *startThread(void *td) {
             self->weexRuntime = new WeexRuntimeV2(new TimerQueue(self),WeexEnv::getEnv()->scriptBridge(), self->isMultiProgress);
         } else{
             LOGE("[weex_plan] jsc");
-            self->weexRuntime = new WeexRuntime(new TimerQueue(self),WeexEnv::getEnv()->scriptBridge(), self->isMultiProgress);
         }
        //
 
@@ -171,7 +170,7 @@ WeexTaskQueue::WeexTaskQueue(bool isMultiProgress) : weexRuntime(nullptr) {
     this->weexRuntime = nullptr;
 }
 
-void WeexTaskQueue::removeAllTask(String id) {
+void WeexTaskQueue::removeAllTask(const std::string &id) {
     threadLocker.lock();
     if (taskQueue_.empty()) {
         threadLocker.unlock();

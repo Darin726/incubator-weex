@@ -41,9 +41,9 @@
 #include <utility>
 #include <vector>
 
-#include <JavaScriptCore/JavaScript.h>
+#include "include/JavaScriptCore/JavaScript.h"
 #include "js_runtime/runtime/runtime_values.h"
-
+#include "include/JavaScriptCore/JSObjectRef.h"
 namespace unicorn {
 
 class JSCFunction : public Function {

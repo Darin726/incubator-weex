@@ -40,7 +40,7 @@
 #include <utility>
 #include <vector>
 
-#include <JavaScriptCore/JavaScript.h>
+#include "include/JavaScriptCore/JavaScript.h"
 #include "js_runtime/runtime/runtime_values.h"
 
 namespace unicorn {

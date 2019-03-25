@@ -37,8 +37,6 @@ public:
 
     explicit WeexObjectHolderV2(unicorn::RuntimeVM *vm, TimerQueue *timeQueue, bool isMultiProgress);
 
-    void initFromIPCArguments(IPCArguments *arguments, size_t startCount, bool forAppContext);
-
     void initFromParams(std::vector<INIT_FRAMEWORK_PARAMS *> &params, bool forAppContext);
 
     WeexGlobalObjectV2 *createWeexObject();

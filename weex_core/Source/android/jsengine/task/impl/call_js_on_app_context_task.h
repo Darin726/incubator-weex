@@ -30,9 +30,9 @@
 class CallJsOnAppContextTask : public WeexTask {
 
 public:
-    CallJsOnAppContextTask(const String &instanceId, const String &func, std::vector<VALUE_WITH_TYPE *> &params);
+    CallJsOnAppContextTask(const std::string &instanceId, const std::string &func, std::vector<VALUE_WITH_TYPE *> &params);
 
-    CallJsOnAppContextTask(const String &instanceId, const String &func, IPCArguments *arguments, size_t startCount);
+    CallJsOnAppContextTask(const std::string &instanceId, const std::string &func, IPCArguments *arguments, size_t startCount);
 
     void run(WeexRuntime *runtime) override;
     std::string taskName() override { return " CallJsOnAppContextTask "; }
@@ -43,7 +43,7 @@ public:
     }
 
 private:
-    String func;
+    std::string func;
     ExeJsArgs *exeJsArgs;
 };
 

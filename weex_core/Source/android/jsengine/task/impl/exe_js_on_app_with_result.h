@@ -28,14 +28,14 @@
 
 class ExeJsOnAppWithResultTask : public WeexTask {
 public:
-    ExeJsOnAppWithResultTask(const String &instanceId, const String &script);
+    ExeJsOnAppWithResultTask(const std::string &instanceId, const std::string &script);
 
 
     void run(WeexRuntime *runtime) override;
     std::string taskName() override { return "ExeJsOnAppWithResultTask"; }
 
 private:
-    String script;
+    std::string script;
 
 };
 

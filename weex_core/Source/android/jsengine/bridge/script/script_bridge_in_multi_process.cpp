@@ -258,8 +258,8 @@ namespace weex {
                     init_framework_params->value = IPCByteArrayToWeexByteArray(ba);
 
                     if(!WeexEnv::getEnv()->enableBackupThread()) {
-                        auto type = String::fromUTF8(init_framework_params->type->content);
-                        auto value = String::fromUTF8(init_framework_params->value->content);
+                        std::string type = init_framework_params->type->content;
+                        std::string value = init_framework_params->value->content;
                         if(type == "enableBackupThread") {
                             auto enable = value == "true";
                             LOGE("enable backupThread %d",enable);

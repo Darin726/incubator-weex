@@ -22,7 +22,7 @@
 
 #include "update_global_config_task.h"
 
-UpdateGlobalConfigTask::UpdateGlobalConfigTask(const String &script) : WeexTask("") {
+UpdateGlobalConfigTask::UpdateGlobalConfigTask(const std::string &script) : WeexTask("") {
     this->script = script;
 }
 

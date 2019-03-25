@@ -37,39 +37,14 @@
 #include <thread>
 #include <type_traits>
 #include <unistd.h>
+#include "include/WeexApiValue.h"
 
 #include "base/base64/base64.h"
 #include "base/crash/crash_handler.h"
 #include "base/utils/log_utils.h"
-#include "config.h"
 #include "include/WeexApiHeader.h"
-#include "include/JavaScriptCore/runtime/JSExportMacros.h"
-#include "include/JavaScriptCore/inspector/ScriptCallStackFactory.h"
-#include "include/JavaScriptCore/inspector/ScriptArguments.h"
-#include "include/JavaScriptCore/runtime/ConsoleClient.h"
-#include "include/JavaScriptCore/heap/HeapTimer.h"
-#include "include/JavaScriptCore/heap/Strong.h"
-#include "include/JavaScriptCore/heap/StrongInlines.h"
-#include "include/JavaScriptCore/runtime/Completion.h"
-#include "include/JavaScriptCore/runtime/EnumerationMode.h"
-#include "include/JavaScriptCore/runtime/Exception.h"
-#include "include/JavaScriptCore/runtime/ExceptionHelpers.h"
-#include "include/JavaScriptCore/runtime/JSFunction.h"
-#include "include/JavaScriptCore/runtime/InitializeThreading.h"
-#include "include/JavaScriptCore/runtime/JSString.h"
-#include "include/JavaScriptCore/runtime/JSArrayBuffer.h"
-#include "include/JavaScriptCore/runtime/Lookup.h"
-#include "include/JavaScriptCore/runtime/ObjectConstructor.h"
-#include "include/wtf/CurrentTime.h"
-#include "include/wtf/Trace.h"
-#include "include/wtf/ICUCompatible.h"
-#include "include/wtf/text/Base64.h"
-#include "include/wtf/text/StringBuilder.h"
-#include "include/wtf/unicode/WTFUTF8.h"
 
-#include "android/jsengine/object/weex_simple_object.h"
 #include "android/jsengine/object/args.h"
-#include "android/jsengine/wson/wson_jsc.h"
 
 #include "third_party/IPC/Buffering/IPCBuffer.h"
 #include "third_party/IPC/IPCArguments.h"
@@ -93,99 +68,30 @@
 
 #define TIMESPCE 1000
 
-using namespace JSC;
 using namespace WeexCore;
 
 extern bool config_use_wson;
 
-String jString2String(const uint16_t *str, size_t length);
+std::string jString2String(const uint16_t *str, size_t length);
 
 
-String weexString2String(const WeexString *weexString);
+std::string weexString2String(const WeexString *weexString);
 
-String char2String(const char *string);
+std::string char2String(const char* str);
 
-void addString(IPCSerializer *serializer, const String &s);
+//void addString(IPCSerializer *serializer, const String &s);
 
-void getArgumentAsJString(IPCSerializer *serializer, ExecState *state, int argument);
-
-WeexByteArray *getArgumentAsWeexByteArrayJSON(ExecState *state, int argument);
 WeexString *genWeexStringSS(const uint16_t *str, size_t length);
 WeexByteArray *genWeexByteArraySS(const char *str, size_t strLen);
 
-JSValue jString2JSValue(ExecState *state, const uint16_t *str, size_t length);
-
-JSValue String2JSValue(ExecState *state, String s);
-
-JSValue parseToObject(ExecState *state, const String &data);
-
-void getArgumentAsJByteArrayJSON(IPCSerializer *serializer, ExecState *state, int argument);
-
-void getArgumentAsJByteArray(IPCSerializer *serializer, ExecState *state, int argument);
 void freeInitFrameworkParams(std::vector<INIT_FRAMEWORK_PARAMS *> &params);
 void freeParams(std::vector<VALUE_WITH_TYPE *> &params);
-void FillVectorOfInitFramework(std::vector<INIT_FRAMEWORK_PARAMS *> &params,
-                               IPCArguments *arguments, size_t start,
-                               size_t end);
-std::unique_ptr<char[]> getCharJSONStringFromState(ExecState *state, int argument);
-
-std::unique_ptr<char[]> getCharOrJSONStringFromState(ExecState *state, int argument);
-
-std::unique_ptr<char[]> getCharStringFromState(ExecState *state, int argument);
-
-/** auto choose use wson or json */
-void getWsonOrJsonArgsFromState(ExecState *state, int argument, Args& args);
-
-/** force string */
-void getStringArgsFromState(ExecState *state, int argument, Args& args);
-
-/**
- * get wson args with wson parser
- */
-void getWsonArgsFromState(ExecState *state, int argument, Args& args);
-
-/**
- * get json args with JSONStringify
- */
-void getJSONArgsFromState(ExecState *state, int argument, Args& args);
-
-/**
- * add to ipc argument
- * 
- */
-void addObjectArgsToIPC(IPCSerializer *serializer, Args& args);
-void addStringArgsToIPC(IPCSerializer *serializer, Args& args);
-
-
-std::unique_ptr<char[]> newCharString(const char *str, size_t length);
 void printLogOnFileWithNameS(const char * name,const char *log);
-void getArgumentAsCString(IPCSerializer *serializer, ExecState *state, int argument);
 
-void initHeapTimer();
-
-void deinitHeapTimer();
-
-void markupStateInternally();
 
 void doUpdateGlobalSwitchConfig(const char *config);
 
-class WeexGlobalObject;
-
-void setJSFVersion(WeexGlobalObject *globalObject);
-
-String exceptionToString(JSGlobalObject *globalObject, JSValue exception);
-
-void ReportException(JSGlobalObject *globalObject,
-                     Exception *exception,
-                     const char *jinstanceid,
-                     const char *func);
-
-bool ExecuteJavaScript(JSGlobalObject *globalObject,
-                       const String &source,
-                       const String &url,
-                       bool report_exceptions,
-                       const char *func,
-                       const char *instanceId = "");
+//String exceptionToString(JSGlobalObject *globalObject, JSValue exception);
 
 uint64_t microTime();
 int __atomic_inc(volatile int *ptr);
@@ -265,39 +171,39 @@ namespace WEEXICU {
         return false; \
     }
     extern "C" {
-    void udata_setCommonData(const void *data, UErrorCode *pErrorCode);
+//    void udata_setCommonData(const void *data, UErrorCode *pErrorCode);
     }
 
-    static bool mapIcuData(const std::string &path) {
-        // Open the file and get its length.
-        unique_fd fd(open(path.c_str(), O_RDONLY));
-        if (fd.get() == -1) {
-            FAIL_WITH_STRERROR("open");
-        }
-        struct stat sb;
-        if (fstat(fd.get(), &sb) == -1) {
-            FAIL_WITH_STRERROR("stat");
-        }
-
-        // Map it.
-        void *data = mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd.get(), 0);
-        if (data == MAP_FAILED) {
-            FAIL_WITH_STRERROR("mmap");
-        }
-
-        // Tell the kernel that accesses are likely to be random rather than sequential.
-        if (madvise(data, sb.st_size, MADV_RANDOM) == -1) {
-            FAIL_WITH_STRERROR("madvise(MADV_RANDOM)");
-        }
-
-        UErrorCode status = U_ZERO_ERROR;
-
-        // Tell ICU to use our memory-mapped data.
-            udata_setCommonData(data, &status);
-        MAYBE_FAIL_WITH_ICU_ERROR("udata_setCommonData");
-
-        return true;
-    }
+//    static bool mapIcuData(const std::string &path) {
+//        // Open the file and get its length.
+//        unique_fd fd(open(path.c_str(), O_RDONLY));
+//        if (fd.get() == -1) {
+//            FAIL_WITH_STRERROR("open");
+//        }
+//        struct stat sb;
+//        if (fstat(fd.get(), &sb) == -1) {
+//            FAIL_WITH_STRERROR("stat");
+//        }
+//
+//        // Map it.
+//        void *data = mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd.get(), 0);
+//        if (data == MAP_FAILED) {
+//            FAIL_WITH_STRERROR("mmap");
+//        }
+//
+//        // Tell the kernel that accesses are likely to be random rather than sequential.
+//        if (madvise(data, sb.st_size, MADV_RANDOM) == -1) {
+//            FAIL_WITH_STRERROR("madvise(MADV_RANDOM)");
+//        }
+//
+//        UErrorCode status = U_ZERO_ERROR;
+//
+//        // Tell ICU to use our memory-mapped data.
+//            udata_setCommonData(data, &status);
+//        MAYBE_FAIL_WITH_ICU_ERROR("udata_setCommonData");
+//
+//        return true;
+//    }
 
     static bool initICUEnv(bool multiProcess) {
         static bool isInit = false;
@@ -327,10 +233,10 @@ namespace WEEXICU {
             LOGE("load icui18n so");
             return false;
         }
-        if (!initICU()) {
-            LOGE("initICU failed");
-            return false;
-        }
+//        if (!initICU()) {
+//            LOGE("initICU failed");
+//            return false;
+//        }
         if (strlen(path) > 0) {
             isInit = true;
             return true;//mapIcuData(std::string(path));
