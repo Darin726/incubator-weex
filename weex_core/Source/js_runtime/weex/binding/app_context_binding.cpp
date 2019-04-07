@@ -92,7 +92,7 @@ namespace weex {
             WeexConversionUtils::GetStringFromArgsDefaultEmpty(vars, 0, client_id);
             LOG_WEEX_BINDING("WeexRuntime: __dispatch_message__ client_id is %s", client_id.c_str());
 
-            bool succeed = WeexConversionUtils::GetJsonStrFromArgs(vars, 1, data);
+            bool succeed = WeexConversionUtils::GetCharOrJsonFromArgs(vars, 1, data);
             const char *data_char = succeed ? data.c_str() : nullptr;
             LOG_WEEX_BINDING("WeexRuntime: __dispatch_message__ data is %s", data_char);
 
@@ -121,7 +121,7 @@ namespace weex {
             std::string vm_id;
 
             WeexConversionUtils::GetStringFromArgsDefaultEmpty(vars, 0, client_id);
-            bool succeed = WeexConversionUtils::GetJsonStrFromArgs(vars, 1, data);
+            bool succeed = WeexConversionUtils::GetCharOrJsonFromArgs(vars, 1, data);
             const char *data_char = succeed ? data.c_str() : nullptr;
             vm_id = this->nativeObject->id;
 
@@ -154,7 +154,7 @@ namespace weex {
             std::string vm_id;
 
 
-            bool succeed = WeexConversionUtils::GetJsonStrFromArgs(vars, 0, data);
+            bool succeed = WeexConversionUtils::GetCharOrJsonFromArgs(vars, 0, data);
             const char *data_char = succeed ? data.c_str() : nullptr;
             //LOG_WEEX_BINDING("WeexRuntime: postMessage data is %s", data_char);
 

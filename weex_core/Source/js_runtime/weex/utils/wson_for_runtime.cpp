@@ -41,8 +41,8 @@ namespace wson {
                 LOG_CONVERSION("[toRunTimeValueFromWson][string][start]");
                 int size = wson_next_uint(buffer);
                 uint8_t *utf8 = wson_next_bts(buffer, size);
-                std::string string_utf_8 = std::string(reinterpret_cast<char *>(utf8));
-                LOG_CONVERSION("[toRunTimeValueFromWson][string][end] :%s", string_utf_8.c_str());
+                std::string string_utf_8 = std::string(reinterpret_cast<char *>(utf8),  size);
+                LOG_CONVERSION("[toRunTimeValueFro  mWson][string][end] :%s", string_utf_8.c_str());
                 return new unicorn::RuntimeValues(string_utf_8);
             }
             case WSON_STRING_TYPE:

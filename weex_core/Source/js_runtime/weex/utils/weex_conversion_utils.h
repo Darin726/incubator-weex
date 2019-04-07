@@ -52,7 +52,7 @@ namespace weex {
                                                           std::string &result);
 
             static bool
-            GetJsonStrFromArgs(const std::vector<unicorn::ScopeValues> &vars, int index, std::string &result);
+            GetCharOrJsonFromArgs(const std::vector<unicorn::ScopeValues> &vars, int index, std::string &result);
 
             static void
             GetWsonFromArgs(const std::vector<unicorn::ScopeValues> &vars, int index, Args &args);
@@ -62,6 +62,8 @@ namespace weex {
             static void ConvertRunTimeVaueToWson(unicorn::RuntimeValues *value, Args &args);
 
             static json11::Json RunTimeValuesOfObjectToJson(unicorn::RuntimeValues *vars);
+
+            static void convertJSRuntimeValueToStdString(const unicorn::ScopeValues &param, std::string &target);
 
         };
 

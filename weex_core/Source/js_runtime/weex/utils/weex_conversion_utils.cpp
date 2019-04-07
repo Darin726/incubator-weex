@@ -164,13 +164,13 @@ namespace weex {
                 case ParamsType::STRING: {
                     WeexString *ipcstr = paramsObject->value.string;
                     const String &string2String = weexString2String(ipcstr);
-                   // LOG_CONVERSION("WeexValueToRuntimeValue string :%s", string2String.utf8().data());
+                    // LOG_CONVERSION("WeexValueToRuntimeValue string :%s", string2String.utf8().data());
                     return unicorn::RuntimeValues::MakeString(std::string(string2String.utf8().data()));
                 }
                 case ParamsType::JSONSTRING: {
                     const WeexString *ipcJsonStr = paramsObject->value.string;
                     const String &string = weexString2String(ipcJsonStr);
-                    LOG_CONVERSION("WeexValueToRuntimeValue JSONSTRING length:%d",string.length());
+                    LOG_CONVERSION("WeexValueToRuntimeValue JSONSTRING length:%d", string.length());
                     auto res = unicorn::RuntimeValues::MakeObjectFromJsonStr(std::string(string.utf8().data()));
                     LOG_CONVERSION("WeexValueToRuntimeValue JSONSTRING succeed");
                     return res;
@@ -191,7 +191,7 @@ namespace weex {
                 default:
                     //obj->append(jsUndefined());
                     //  break;
-                    LOGE("WeexValueToRuntimeValue unkonw value type :%d",paramsObject->type);
+                    LOGE("WeexValueToRuntimeValue unkonw value type :%d", paramsObject->type);
                     return unicorn::RuntimeValues::MakeUndefined();
             }
         }
@@ -209,7 +209,7 @@ namespace weex {
                 result.assign("undefined");
                 return;
             }
-            vars[index]->GetAsString(&result);
+            convertJSRuntimeValueToStdString(vars[index], result);
         }
 
 
@@ -220,28 +220,19 @@ namespace weex {
                 result.assign("");
                 return;
             }
-            if (vars[index]->IsUndefined() || vars[index]->IsNull()) {
-                result.assign("undefined");
-                return;
-            }
-            if (vars[index]->IsInt()) {
-                int val = 0;
-                vars[index]->GetAsInteger(&val);
-                result.assign(std::to_string(val));
-                return;;
-            }
-            vars[index]->GetAsString(&result);
+            convertJSRuntimeValueToStdString(vars[index], result);
         }
 
-        bool WeexConversionUtils::GetJsonStrFromArgs(const std::vector<unicorn::ScopeValues> &vars, int index,
-                                                     std::string &result) {
-            if (index >= vars.size() || vars[index].get() == nullptr || vars[index]->IsNull() ||
-                vars[index]->IsUndefined()) {
+        bool WeexConversionUtils::GetCharOrJsonFromArgs(const std::vector<unicorn::ScopeValues> &vars, int index,
+                                                        std::string &result) {
+            if (index >= vars.size() || vars[index].get() == nullptr) {
                 return false;
             }
-
-            WeexConversionUtils::RunTimeValuesOfObjectToJson(vars[index].get()).dump(result);
-
+            if (vars[index]->IsMap()) {
+                WeexConversionUtils::RunTimeValuesOfObjectToJson(vars[index].get()).dump(result);
+            } else {
+                convertJSRuntimeValueToStdString(vars[index], result);
+            }
             return true;
         }
 
@@ -286,7 +277,6 @@ namespace weex {
                 memcpy(buf, data, jsResult->length);
                 wson_parser parser((char *) buffer->data);
                 LOGW("[exeJSWithResult] result wson :%s", parser.toStringUTF8().c_str());
-
                 wson_buffer_free(buffer);
             } else {
                 std::string json_str;
@@ -297,6 +287,83 @@ namespace weex {
             }
             buf[jsResult->length] = '\0';
             jsResult->data.reset(buf);
+        }
+
+
+//        JSString* JSValue::toStringSlowCase(ExecState* exec, bool returnEmptyStringOnError) const
+//        {
+//            VM& vm = exec->vm();
+//            auto scope = DECLARE_THROW_SCOPE(vm);
+//
+//            auto errorValue = [&] () -> JSString* {
+//                if (returnEmptyStringOnError)
+//                    return jsEmptyString(exec);
+//                return nullptr;
+//            };
+//
+//            ASSERT(!isString());
+//            if (isInt32()) {
+//                auto integer = asInt32();
+//                if (static_cast<unsigned>(integer) <= 9)
+//                    return vm.smallStrings.singleCharacterString(integer + '0');
+//                return jsNontrivialString(&vm, vm.numericStrings.add(integer));
+//            }
+//            if (isDouble())
+//                return jsString(&vm, vm.numericStrings.add(asDouble()));
+//            if (isTrue())
+//                return vm.smallStrings.trueString();
+//            if (isFalse())
+//                return vm.smallStrings.falseString();
+//            if (isNull())
+//                return vm.smallStrings.nullString();
+//            if (isUndefined())
+//                return vm.smallStrings.undefinedString();
+//            if (isSymbol()) {
+//                throwTypeError(exec, scope, ASCIILiteral("Cannot convert a symbol to a string"));
+//                return errorValue();
+//            }
+//
+//            ASSERT(isCell());
+//            JSValue value = asCell()->toPrimitive(exec, PreferString);
+//            RETURN_IF_EXCEPTION(scope, errorValue());
+//            ASSERT(!value.isObject());
+//            JSString* result = value.toString(exec);
+//            RETURN_IF_EXCEPTION(scope, errorValue());
+//            return result;
+//        }
+
+
+        /**
+         * impl wtf::string for histroy compatible (getCharOrJSONStringFromState in weexGlobalObject)
+         * const char* const nullString = "null";
+          * const char* const trueString = "true";
+        * const char* const falseString = "false";
+         */
+        void
+        WeexConversionUtils::convertJSRuntimeValueToStdString(const unicorn::ScopeValues &param, std::string &target) {
+            if (param->IsString()) {
+                std::string res;
+                param->GetAsString(&res);
+                target.assign(res);
+            } else if (param->IsUndefined()) {
+                target.assign("undefined");
+            } else if (param->IsNull()) {
+                target.assign("null");
+            } else if (param->IsInt()) {
+                int int_value = 0;
+                param->GetAsInteger(&int_value);
+                target.assign(std::to_string(int_value));
+            } else if (param->IsDouble()) {
+                double double_value = 0;
+                param->GetAsDouble(&double_value);
+                target.assign(std::to_string(double_value));
+            } else if (param->IsBool()) {
+                bool result = false;
+                param->GetAsBoolean(&result);
+                target.assign(result ? "true" : "false");
+            } else if (param->IsObject()) {
+                LOGE("JSRuntimeValueToStdString ,not support object type!");
+            }
         }
     }
 }

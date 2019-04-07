@@ -72,8 +72,8 @@ namespace unicorn {
         // Conversion::printJSValueRefException(context_, exceptionRef);
 
         JSStringRelease(source);
-        if (exceptionRef) {
-            // to be done
+        if (exceptionRef && nullptr != runException) {
+            Conversion::JSValueToStdString(context_,exceptionRef,runException);
             return false;
         }
         LOG_JS_RUNTIME("WeexRuntime:: RunJavaScript succeed this");

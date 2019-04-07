@@ -175,7 +175,7 @@ namespace weex {
             std::string callback_str;
 
             WeexConversionUtils::GetStringFromArgsDefaultUndefined(vars, 0, page_id);
-            bool succeed = WeexConversionUtils::GetJsonStrFromArgs(vars, 1, task);
+            bool succeed = WeexConversionUtils::GetCharOrJsonFromArgs(vars, 1, task);
             const char *task_char = succeed ? task.c_str() : nullptr;
             WeexConversionUtils::GetStringFromArgsDefaultUndefined(vars, 2, callback_str);
 

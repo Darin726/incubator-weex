@@ -181,7 +181,7 @@ namespace weex {
 
             WeexConversionUtils::GetStringFromArgsDefaultUndefined(vars, 0, page_id);
             WeexConversionUtils::GetStringFromArgsDefaultUndefined(vars, 1, cid);
-            bool succeed = WeexConversionUtils::GetJsonStrFromArgs(vars, 2, json_data);
+            bool succeed = WeexConversionUtils::GetCharOrJsonFromArgs(vars, 2, json_data);
             const char *json_data_char = succeed ? json_data.c_str() : nullptr;
 
             LOG_WEEX_BINDING("WeexGlobalBinding method :__updateComponentData page:%s, cid:%s,json_data:%s",
@@ -190,7 +190,7 @@ namespace weex {
 
             nativeObject->js_bridge()->core_side()->UpdateComponentData(page_id.c_str(), cid.c_str(),
                                                                         json_data_char);
-            return unicorn::ScopeValues();
+            return unicorn::RuntimeValues::MakeUndefined();
         }
 
 
