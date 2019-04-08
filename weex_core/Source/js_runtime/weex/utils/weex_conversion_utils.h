@@ -57,6 +57,9 @@ namespace weex {
             static void
             GetWsonFromArgs(const std::vector<unicorn::ScopeValues> &vars, int index, Args &args);
 
+            static void GetJSONArgsFromArgsByWml(const std::vector<unicorn::ScopeValues> &vars, int index,
+                                                 std::string &args);
+
         private:
 
             static void ConvertRunTimeVaueToWson(unicorn::RuntimeValues *value, Args &args);

@@ -228,7 +228,8 @@ namespace weex {
             if (index >= vars.size() || vars[index].get() == nullptr) {
                 return false;
             }
-            if (vars[index]->IsMap()) {
+            LOG_CONVERSION("GetCharOrJsonFromArgs");
+            if (vars[index]->IsMap() || vars[index]->IsArray()) {
                 WeexConversionUtils::RunTimeValuesOfObjectToJson(vars[index].get()).dump(result);
             } else {
                 convertJSRuntimeValueToStdString(vars[index], result);
@@ -361,8 +362,25 @@ namespace weex {
                 bool result = false;
                 param->GetAsBoolean(&result);
                 target.assign(result ? "true" : "false");
-            } else if (param->IsObject()) {
-                LOGE("JSRuntimeValueToStdString ,not support object type!");
+            } else {
+                LOGE("JSRuntimeValueToStdString ,not support  type %d:", param->GetType());
+            }
+        }
+
+        void
+        WeexConversionUtils::GetJSONArgsFromArgsByWml(const std::vector<unicorn::ScopeValues> &vars, int index,
+                                                      std::string &args) {
+            if (index >= vars.size()) {
+                args.assign("");
+                return;
+            }
+            if (vars[index]->IsString()) {
+                vars[index]->GetAsString(&args);
+            } else if (vars[index]->IsMap() || vars[index]->IsArray()) {
+                WeexConversionUtils::RunTimeValuesOfObjectToJson(vars[index].get()).dump(args);
+            } else {
+                args.assign("");
+                return;
             }
         }
     }
