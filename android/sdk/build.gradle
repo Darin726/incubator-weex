@@ -18,15 +18,10 @@
  */
 
 buildscript {
-    repositories {
-        mavenLocal()
-        maven {url 'http://maven.aliyun.com/nexus/content/groups/public/'}
-        mavenCentral()
-        jcenter()
-    }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.3'
-        classpath 'com.vanniktech:gradle-android-junit-jacoco-plugin:0.5.0'
+        if(!project.disableCov) {
+            classpath 'com.vanniktech:gradle-android-junit-jacoco-plugin:0.5.0'
+        }
     }
 }
 
@@ -39,8 +34,7 @@ apply plugin: 'checkstyle'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
 
-ext.disableCov = project.hasProperty('disableCov') ? project.getProperty('disableCov') : 'false'
-if(!disableCov.toBoolean()){
+if(!project.disableCov){
     apply plugin: 'com.vanniktech.android.junit.jacoco'
     junitJacoco {
         excludes = ['com/taobao/weex/dom/flex/**','com/taobao/weex/ui/view/refresh/circlebar/**']
@@ -63,15 +57,15 @@ checkstyle {
 }
 
 version = project.hasProperty('weexVersion')? project.getProperty('weexVersion') : "0.20.0.1"
+def buildSo = true;
+
+if(project.hasProperty('buildSo') && "false".equals(project.getProperty('buildSo'))) {
+    buildSo = false;
+} 
+
+println "build so flag is " + buildSo
 
 android {
-    delete 'libs/armeabi/libweexcore.so'
-    delete 'libs/armeabi-v7a/libweexcore.so'
-    delete 'libs/x86/libweexcore.so'
-    delete 'libs/armeabi/libweexjss.so'
-    delete 'libs/armeabi-v7a/libweexjss.so'
-    delete 'libs/x86/libweexjss.so'
-
     compileSdkVersion project.compileSdkVersion
     buildToolsVersion project.buildToolsVersion
     resourcePrefix "weex"
@@ -134,14 +128,8 @@ android {
     } else {
         api_level = "android-19";
     }
-    println "ARMEABI_Size: "+ARMEABI_Size;
-    println "ARMEABIV7_Size:" + ARMEABIV7_Size;
-    println "X86_Size:" + X86_Size;
 
     defaultConfig {
-        buildConfigField "long", "ARMEABI_Size", "${ARMEABI_Size}"
-        buildConfigField "long", "ARMEABIV7_Size", "${ARMEABIV7_Size}"
-        buildConfigField "long", "X86_Size", "${X86_Size}"
         buildConfigField "String", "buildJavascriptFrameworkVersion", "\"${jsfmVersion}\""
         buildConfigField "String", "buildVersion", "\"${version}\""
         minSdkVersion project.minSdkVersion
@@ -151,20 +139,23 @@ android {
 
         versionCode 1
         versionName project.version
-        ndk {
-            abiFilters "armeabi-v7a","armeabi","x86"
-            //abiFilters "armeabi-v7a"
-        }
+        if(buildSo) {
+            ndk {
+                abiFilters "armeabi-v7a","armeabi","x86"
+                //abiFilters "armeabi-v7a"
+            }
 
-        externalNativeBuild {
-            cmake {
-                arguments '-DANDROID_PLATFORM='+"${api_level}",
-                        '-DANDROID_TOOLCHAIN='+"${compile_tool}",
-                        '-DANDROID_STL='+"${cxx_stl}",
-                        '-DCMAKE_BUILD_TYPE=Release',
-                        '-DENABLE_ASAN=false'
+            externalNativeBuild {
+                cmake {
+                    arguments '-DANDROID_PLATFORM='+"${api_level}",
+                            '-DANDROID_TOOLCHAIN='+"${compile_tool}",
+                            '-DANDROID_STL='+"${cxx_stl}",
+                            '-DCMAKE_BUILD_TYPE=Release',
+                            '-DENABLE_ASAN=false'
+                }
             }
         }
+
     }
     buildTypes {
         release {
@@ -183,9 +174,11 @@ android {
         }
     }
 
-    externalNativeBuild {
-        cmake {
-            path '../../weex_core/CMakeLists.txt'
+    if(buildSo) {
+        externalNativeBuild {
+            cmake {
+                path '../../weex_core/CMakeLists.txt'
+            }
         }
     }
 
@@ -369,6 +362,19 @@ bintray {
         version {
             //这里填写需要发布的版本号
             name = project.version
+        }
+    }
+}
+
+afterEvaluate {
+    transformNativeLibsWithStripDebugSymbolForRelease << {
+        copy{
+            from transformNativeLibsWithMergeJniLibsForRelease
+            into new File(project.buildDir, "unstrippedSo")
+            include '**/libweexjss.so', '**/libweexcore.so'
+            eachFile {
+                it.path = "${it.relativePath.segments[5]}_${it.name}"
+            }
         }
     }
 }
