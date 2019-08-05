@@ -3,7 +3,7 @@ set(WEEXCORE_LIBRARY_NAME weexcore)
 set(WEEX_CORE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 message("${ANDROID_STL} ")
-if ("${ANDROID_STL}" STREQUAL "c++_static")
+if ("${ANDROID_STL}" STREQUAL "c++_static" OR "${ANDROID_STL}" STREQUAL "c++_shared")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
 elseif ("${ANDROID_STL}" STREQUAL "gnustl_static")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++1y")

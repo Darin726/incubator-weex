@@ -49,7 +49,7 @@ set(${BASE_LIBRARY_NAME}_SOURCES
     )
 
 if (ANDROID)
-    if ("${ANDROID_ABI}" STREQUAL "x86")
+    if ("${ANDROID_ABI}" STREQUAL "x86" OR "${ANDROID_ABI}" STREQUAL "arm64-v8a")
     else ()
       list(APPEND ${BASE_LIBRARY_NAME}_SOURCES
           crash/backtrace.h

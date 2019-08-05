@@ -1,0 +1,3 @@
+cd android
+sed -i "/playground/d;/commons/d" settings.gradle
+./gradlew weex_sdk:clean weex_sdk:assembleRelease weex_sdk:publish -PweexVersion=0.24.3-for-weibo-SNAPSHOT -PdisableCov="true" -PbuildSo="true" -Pexternal_script="http://gitlab.alibaba-inc.com/android-build-system/buildscript/raw/master/mtl-publish-2.3.gradle http://gitlab.alibaba-inc.com/EMAS-Android/android-buildscript/raw/master/add-emas-publish-repository.gradle" -Pexternal_repositories="http://mvnrepo.alibaba-inc.com/mvn/repository" -DEMASPUBLISH=false --info
