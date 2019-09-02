@@ -23,6 +23,7 @@
 
 #include "weex_runtime_quickjs.h"
 #include "weex_jsc_utils.h"
+#include "log_defines.h"
 
 #define countof(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -135,6 +136,7 @@ WeexRuntimeQuickJS::WeexRuntimeQuickJS(TimerQueue *timeQueue,
                                        bool isMultiProgress) : WeexRuntime(script_bridge) {
     m_jsRuntime = JS_NewRuntime();
     m_jsContextFramework = this->createContext();
+    LOGE("dyyLog");
 }
 
 bool WeexRuntimeQuickJS::hasInstanceId(std::string &id) {
@@ -158,8 +160,8 @@ void WeexRuntimeQuickJS::initFrameworkParams(JSContext *ctx,
         std::string &&value = std::string(param->value->content);
 
         JSCFunctionListEntry jsEntry = JS_PROP_STRING_DEF(type.c_str(),
-                                                     value.c_str(),
-                                                     JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
+                                                          value.c_str(),
+                                                          JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
         JS_SetPropertyStr(ctx, jsValue, type.c_str(), JS_NewString(ctx, value.c_str()));
         if (isSave) {
             auto init_framework_params = (INIT_FRAMEWORK_PARAMS *) malloc(sizeof(INIT_FRAMEWORK_PARAMS));
@@ -188,8 +190,13 @@ int WeexRuntimeQuickJS::initFramework(const std::string &script,
 
     if (JS_IsException(value)) {
         const JSValue &jsValue = JS_GetException(m_jsContextFramework);
+
+        const char *string = JS_ToCString(m_jsContextFramework, jsValue);
+
+        LOGE("dyyLog JS_IsException %s", string);
         return 0;
     } else {
+        LOGE("dyyLog finish");
         return 1;
     }
 }
@@ -275,9 +282,11 @@ int WeexRuntimeQuickJS::updateGlobalConfig(const std::string &config) {
 
 JSContext *WeexRuntimeQuickJS::createContext() {
     JSRuntime *rt = this->m_jsRuntime;
-    JSContext *ctx = JS_NewContextRaw(rt);
-    JS_AddIntrinsicEval(ctx);
-    JS_AddIntrinsicRegExpCompiler(ctx);
+    JSContext *ctx = JS_NewContext(rt);
+//    JS_AddIntrinsicBaseObjects(ctx);
+//    JS_AddIntrinsicRegExp(ctx);
+//    JS_AddIntrinsicEval(ctx);
+//    JS_AddIntrinsicRegExpCompiler(ctx);
     /* loader for ES6 modules */
 //  JS_SetModuleLoaderFunc(rt, NULL, jsc_module_loader, NULL);
     return ctx;
@@ -332,11 +341,13 @@ void WeexRuntimeQuickJS::bindInstanceContextFunctions(JSContext *ctx) {
 
     JS_SetPropertyFunctionList(ctx, JS_GetGlobalObject(ctx), js_fib_funcs, countof(js_fib_funcs));
 }
+
 int WeexRuntimeQuickJS::exeTimerFunctionForRunTimeApi(const std::string &instanceId,
                                                       uint32_t timerFunction,
                                                       bool is_from_instance) {
-  return 0;
+    return 0;
 }
+
 void WeexRuntimeQuickJS::removeTimerFunctionForRunTimeApi(const std::string &instanceId,
                                                           const uint32_t timerFunction,
                                                           bool is_from_instance) {
@@ -344,105 +355,207 @@ void WeexRuntimeQuickJS::removeTimerFunctionForRunTimeApi(const std::string &ins
 }
 
 static JSValue js_GCAndSweep(JSContext *ctx, JSValueConst this_val,
-                             int argc, JSValueConst *argv) {return JS_NULL;}
+                             int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_GCAndSweep");
+    return JS_NULL;
+}
 
 static JSValue js_CallNative(JSContext *ctx, JSValueConst this_val,
-                             int argc, JSValueConst *argv) {return JS_NULL;}
+                             int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallNative");
+    return JS_NULL;
+}
 
 static JSValue js_CallNativeModule(JSContext *ctx, JSValueConst this_val,
-                                   int argc, JSValueConst *argv) {return JS_NULL;}
+                                   int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallNativeModule");
+    return JS_NULL;
+}
 
 static JSValue js_CallNativeComponent(JSContext *ctx, JSValueConst this_val,
-                                      int argc, JSValueConst *argv) {return JS_NULL;}
+                                      int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallNativeComponent");
+    return JS_NULL;
+}
 
 static JSValue js_CallAddElement(JSContext *ctx, JSValueConst this_val,
-                                 int argc, JSValueConst *argv) {return JS_NULL;}
+                                 int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallAddElement");
+    return JS_NULL;
+}
 
 static JSValue js_SetTimeoutNative(JSContext *ctx, JSValueConst this_val,
-                                   int argc, JSValueConst *argv) {return JS_NULL;}
+                                   int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_SetTimeoutNative");
+    return JS_NULL;
+}
 
 static JSValue js_NativeLog(JSContext *ctx, JSValueConst this_val,
-                            int argc, JSValueConst *argv) {return JS_NULL;}
+                            int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_NativeLog");
+    return JS_NULL;
+}
 
 static JSValue js_NotifyTrimMemory(JSContext *ctx, JSValueConst this_val,
-                                   int argc, JSValueConst *argv) {return JS_NULL;}
+                                   int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_NotifyTrimMemory");
+    return JS_NULL;
+}
 
 static JSValue js_MarkupState(JSContext *ctx, JSValueConst this_val,
-                              int argc, JSValueConst *argv) {return JS_NULL;}
+                              int argc, JSValueConst *argv) {
+    return LOGE("dyyLog js_MarkupState");
+    JS_NULL;
+}
 
 static JSValue js_Atob(JSContext *ctx, JSValueConst this_val,
-                       int argc, JSValueConst *argv) {return JS_NULL;}
+                       int argc, JSValueConst *argv) {
+    return LOGE("dyyLog js_Atob");
+    JS_NULL;
+}
 
 static JSValue js_Btoa(JSContext *ctx, JSValueConst this_val,
-                       int argc, JSValueConst *argv) {return JS_NULL;}
+                       int argc, JSValueConst *argv) {
+    return LOGE("dyyLog js_Btoa");
+    JS_NULL;
+}
 
 static JSValue js_CallCreateBody(JSContext *ctx, JSValueConst this_val,
-                                 int argc, JSValueConst *argv) {return JS_NULL;}
+                                 int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallCreateBody");
+    return JS_NULL;
+}
 
 static JSValue js_CallUpdateFinish(JSContext *ctx, JSValueConst this_val,
-                                   int argc, JSValueConst *argv) {return JS_NULL;}
+                                   int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallUpdateFinish");
+    return JS_NULL;
+}
 
 static JSValue js_CallCreateFinish(JSContext *ctx, JSValueConst this_val,
-                                   int argc, JSValueConst *argv) {return JS_NULL;}
+                                   int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallCreateFinish");
+    return JS_NULL;
+}
 
 static JSValue js_CallRefreshFinish(JSContext *ctx, JSValueConst this_val,
-                                    int argc, JSValueConst *argv) {return JS_NULL;}
+                                    int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallRefreshFinish");
+    return JS_NULL;
+}
 
 static JSValue js_CallUpdateAttrs(JSContext *ctx, JSValueConst this_val,
-                                  int argc, JSValueConst *argv) {return JS_NULL;}
+                                  int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallUpdateAttrs");
+    return JS_NULL;
+}
 
 static JSValue js_CallUpdateStyle(JSContext *ctx, JSValueConst this_val,
-                                  int argc, JSValueConst *argv) {return JS_NULL;}
+                                  int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallUpdateStyle");
+    return JS_NULL;
+}
 
 static JSValue js_CallRemoveElement(JSContext *ctx, JSValueConst this_val,
-                                    int argc, JSValueConst *argv) {return JS_NULL;}
+                                    int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallRemoveElement");
+    return JS_NULL;
+}
 
 static JSValue js_CallMoveElement(JSContext *ctx, JSValueConst this_val,
-                                  int argc, JSValueConst *argv) {return JS_NULL;}
+                                  int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallMoveElement");
+    return JS_NULL;
+}
 
 static JSValue js_CallAddEvent(JSContext *ctx, JSValueConst this_val,
-                               int argc, JSValueConst *argv) {return JS_NULL;}
+                               int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallAddEvent");
+    return JS_NULL;
+}
 
 static JSValue js_CallRemoveEvent(JSContext *ctx, JSValueConst this_val,
-                                  int argc, JSValueConst *argv) {return JS_NULL;}
+                                  int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_CallRemoveEvent");
+    return JS_NULL;
+}
 
 static JSValue js_GCanvasLinkNative(JSContext *ctx, JSValueConst this_val,
-                                    int argc, JSValueConst *argv) {return JS_NULL;}
+                                    int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_GCanvasLinkNative");
+    return JS_NULL;
+}
 
 static JSValue js_SetIntervalWeex(JSContext *ctx, JSValueConst this_val,
-                                  int argc, JSValueConst *argv) {return JS_NULL;}
+                                  int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_SetIntervalWeex");
+    return JS_NULL;
+}
 
 static JSValue js_ClearIntervalWeex(JSContext *ctx, JSValueConst this_val,
-                                    int argc, JSValueConst *argv) {return JS_NULL;}
+                                    int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_ClearIntervalWeex");
+    return JS_NULL;
+}
 
 static JSValue js_T3DLinkNative(JSContext *ctx, JSValueConst this_val,
-                                int argc, JSValueConst *argv) {return JS_NULL;}
+                                int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_T3DLinkNative");
+    return JS_NULL;
+}
 
 static JSValue js_NativeLogContext(JSContext *ctx, JSValueConst this_val,
-                                   int argc, JSValueConst *argv) {return JS_NULL;}
+                                   int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_NativeLogContext");
+    return JS_NULL;
+}
 
 static JSValue js_DisPatchMeaage(JSContext *ctx, JSValueConst this_val,
-                                 int argc, JSValueConst *argv) {return JS_NULL;}
+                                 int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_DisPatchMeaage");
+    return JS_NULL;
+}
 
 static JSValue js_DispatchMessageSync(JSContext *ctx, JSValueConst this_val,
-                                      int argc, JSValueConst *argv) {return JS_NULL;}
+                                      int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_DispatchMessageSync");
+    return JS_NULL;
+}
 
 static JSValue js_PostMessage(JSContext *ctx, JSValueConst this_val,
-                              int argc, JSValueConst *argv) {return JS_NULL;}
+                              int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_PostMessage");
+    return JS_NULL;
+}
 
 static JSValue js_NativeSetTimeout(JSContext *ctx, JSValueConst this_val,
-                                   int argc, JSValueConst *argv) {return JS_NULL;}
+                                   int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_NativeSetTimeout");
+    return JS_NULL;
+}
 
 static JSValue js_NativeSetInterval(JSContext *ctx, JSValueConst this_val,
-                                    int argc, JSValueConst *argv) {return JS_NULL;}
+                                    int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_NativeSetInterval");
+    return JS_NULL;
+}
 
 static JSValue js_NativeClearTimeout(JSContext *ctx, JSValueConst this_val,
-                                     int argc, JSValueConst *argv) {return JS_NULL;}
+                                     int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_NativeClearTimeout");
+    return JS_NULL;
+}
 
 static JSValue js_NativeClearInterval(JSContext *ctx, JSValueConst this_val,
-                                      int argc, JSValueConst *argv) {return JS_NULL;}
+                                      int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_NativeClearInterval");
+    return JS_NULL;
+}
 
 // For data render
 static JSValue js_UpdateComponentData(JSContext *ctx, JSValueConst this_val,
-                                      int argc, JSValueConst *argv) {return JS_NULL;}
+                                      int argc, JSValueConst *argv) {
+    LOGE("dyyLog js_UpdateComponentData");
+    return JS_NULL;
+}
 

@@ -33,7 +33,7 @@ extern "C"
 #include "quickjs/quickjs.h"
 }
 
-class WeexRuntimeQuickJS : WeexRuntime {
+class WeexRuntimeQuickJS : public WeexRuntime {
 public:
     WeexRuntimeQuickJS(TimerQueue *timeQueue,
                        WeexCore::ScriptBridge *script_bridge,

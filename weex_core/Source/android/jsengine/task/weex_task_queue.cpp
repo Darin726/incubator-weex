@@ -23,6 +23,7 @@
 #include "weex_task_queue.h"
 
 #include <unistd.h>
+#include <weex_runtime_quickjs.h>
 #include "android/jsengine/task/impl/native_timer_task.h"
 #include "android/jsengine/bridge/script/script_bridge_in_multi_process.h"
 #include "android/jsengine/bridge/script/core_side_in_multi_process.h"
@@ -124,7 +125,7 @@ static void *startThread(void *td) {
     if (self->weexRuntime == nullptr) {
         if (WeexEnv::getEnv()->isUseRunTimeApi()){
             LOGE("[weex_plan] new runtime");
-            self->weexRuntime = new WeexRuntimeV2(new TimerQueue(self),WeexEnv::getEnv()->scriptBridge(), self->isMultiProgress);
+            self->weexRuntime = new WeexRuntimeQuickJS(new TimerQueue(self),WeexEnv::getEnv()->scriptBridge(), self->isMultiProgress);
         } else{
             LOGE("[weex_plan] jsc");
         }
