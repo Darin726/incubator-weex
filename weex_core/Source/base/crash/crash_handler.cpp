@@ -338,12 +338,12 @@ void CrashHandlerInfo::printRegContent(void* addr, const char* name)
 void CrashHandlerInfo::printUnwind()
 {
     printf("\nbacktrace:\n");
-#if defined(__arm__)
-    printIP(reinterpret_cast<void*>(m_mcontext.arm_pc));
-    mybacktrace(traceFunction, nullptr, &m_mcontext);
-#else
-    _Unwind_Backtrace(traceFunction, nullptr);
-#endif
+//#if defined(__arm__)
+//    printIP(reinterpret_cast<void*>(m_mcontext.arm_pc));
+//    mybacktrace(traceFunction, nullptr, &m_mcontext);
+//#else
+//    _Unwind_Backtrace(traceFunction, nullptr);
+//#endif
     printf("\n");
 }
 

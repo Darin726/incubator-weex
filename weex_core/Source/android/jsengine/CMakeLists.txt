@@ -5,20 +5,20 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
-if(DEFINED ENV{WEEX_CORE_SOURCE_DIR})
+if (DEFINED ENV{WEEX_CORE_SOURCE_DIR})
     message('WEEX_CORE_SOURCE_DIR has set')
-else()
+else ()
     message('rewrite WEEX_CORE_SOURCE_DIR')
     set(WEEX_CORE_SOURCE_DIR ../..)
-endif()
+endif ()
 
 
-if(DEFINED ENV{ANDROID_PLATFORM})
+if (DEFINED ENV{ANDROID_PLATFORM})
     message('ANDROID_PLATFORM has set')
-else()
+else ()
     message('rewrite ANDROID_PLATFORM')
     set(ANDROID_PLATFORM " ")
-endif()
+endif ()
 
 
 set(PORT JSCOnly)
@@ -36,7 +36,7 @@ add_definitions(-DLOG_JS_DEBUG=0)
 add_definitions(-DUSE_SYSTEM_MALLOC=1)
 if (${ANDROID_PLATFORM} STREQUAL "android-21")
 else ()
-    add_definitions(-D_POSIX_THREAD_KEYS_MAX=128)                              
+    add_definitions(-D_POSIX_THREAD_KEYS_MAX=128)
     add_definitions(-DPTHREAD_KEYS_MAX=_POSIX_THREAD_KEYS_MAX)
 endif ()
 
@@ -45,7 +45,7 @@ if ("${ANDROID_ABI}" STREQUAL "armeabi")
     set(WTF_CPU_ARM 1)
 
     if ("${ANDROID_TOOLCHAIN}" STREQUAL clang)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv7-a")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv7-a")
     endif ()
 elseif ("${ANDROID_ABI}" STREQUAL "armeabi-v7a")
     add_definitions(-DWTF_CPU_ARM)
@@ -130,7 +130,6 @@ set(WEEX_RUNTIME_V2
         )
 
 
-
 set(${WEEXJSSERVER_NAME}_SOURCES
         weex_ipc_client.h
         weex_ipc_client.cpp
@@ -138,6 +137,33 @@ set(${WEEXJSSERVER_NAME}_SOURCES
         weex_ipc_server.cpp
         weex_jsc_utils.h
         weex_jsc_utils.cpp
+        weex_runtime_quickjs.cpp
+        weex_runtime_quickjs.h
+
+
+        quickjs/cutils.c
+        quickjs/libregexp-opcode.h
+        quickjs/libunicode-table.h
+        quickjs/list.h
+        quickjs/quickjs-libc.c
+        quickjs/quickjs.c
+        quickjs/repl.c
+        quickjs/unicode_gen_def.h
+        quickjs/bjson.c
+        quickjs/cutils.h
+        quickjs/libbf.c
+        quickjs/libregexp.c
+        quickjs/libunicode.c
+        quickjs/qjscalc.c
+        quickjs/quickjs-libc.h
+        quickjs/quickjs.h
+        quickjs/libbf.h
+        quickjs/libregexp.h
+        quickjs/libunicode.h
+        quickjs/quickjs-atom.h
+        quickjs/quickjs-opcode.h
+        quickjs/repl-bn.c
+        quickjs/unicode_gen.c
 
         bridge/script/script_bridge_in_multi_so.cpp
         bridge/script/script_bridge_in_multi_process.cpp
@@ -173,13 +199,13 @@ set(${WEEXJSSERVER_NAME}_SOURCES
         task/timer_queue.cpp
         task/back_to_weex_core_queue.cpp
 
-      #  ${JS_RUNTIME_API_SRCS}
+        #  ${JS_RUNTIME_API_SRCS}
         ${JS_RUNTIME_API_SRCS}
         ${DOM_API_SRCS}
         ${WEEX_BINDING}
         ${JSON_SRC}
         ${WEEX_RUNTIME_V2}
-)
+        )
 link_directories(${LOCAL_LIBRARIES_DIR})
 SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}" CACHE STRING "toolchain_exelinkflags" FORCE)
 SET(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -shared")
@@ -187,55 +213,55 @@ SET(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLA
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv7-a -fno-omit-frame-pointer")# -fsanitize=address -g3")
 set(WEEXJSSERVERSTUB_NAME libweexjsb.so)
 add_executable(${WEEXJSSERVERSTUB_NAME}
-               weex_js_server_main_stub.cpp ../../js_runtime/utils/base64.hpp)
+        weex_js_server_main_stub.cpp ../../js_runtime/utils/base64.hpp)
 
-set_target_properties(${WEEXJSSERVERSTUB_NAME} 
-PROPERTIES                                                                        
-LINK_FLAGS                                                                        
-"-pie -fPIE"
-)
+set_target_properties(${WEEXJSSERVERSTUB_NAME}
+        PROPERTIES
+        LINK_FLAGS
+        "-pie -fPIE"
+        )
 
 target_link_libraries(${WEEXJSSERVERSTUB_NAME}
-${WEEXJSSERVER_NAME}
-)
+        ${WEEXJSSERVER_NAME}
+        )
 
 if (APPLE)
-set_target_properties(${WEEXJSSERVERSTUB_NAME}
-PROPERTIES LINK_FLAGS
-"-Wl,--entry=_start"
-)
-endif()
+    set_target_properties(${WEEXJSSERVERSTUB_NAME}
+            PROPERTIES LINK_FLAGS
+            "-Wl,--entry=_start"
+            )
+endif ()
 
 
 set(${WEEXJSSERVER_NAME}_LIBRARY_TYPE SHARED)
 
 message("${LOCAL_LIBRARIES_DIR}")
 set(${WEEXJSSERVER_NAME}_LIBRARIES
-weexbase
-weexipc
-wson
-c++_shared
-jsc
-log
-z
--lc
--ldl
--pthread
-)
+        weexbase
+        weexipc
+        wson
+        c++_shared
+        jsc
+        log
+        z
+        -lc
+        -ldl
+        -pthread
+        )
 
 add_library(${WEEXJSSERVER_NAME} SHARED
-            ${${WEEXJSSERVER_NAME}_SOURCES} )
+        ${${WEEXJSSERVER_NAME}_SOURCES})
 
 
 target_link_libraries(${WEEXJSSERVER_NAME}
-                      ${${WEEXJSSERVER_NAME}_LIBRARIES})
+        ${${WEEXJSSERVER_NAME}_LIBRARIES})
 set_target_properties(${WEEXJSSERVER_NAME} PROPERTIES NO_SONAME TRUE)
 
 set_target_properties(${WEEXJSSERVER_NAME}
-PROPERTIES
-LINK_FLAGS
-"-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}//weexjsserver_version_script.txt -Wl,--no-undefined -Wl,-soname,libweexjss${SERVERSUFFIX}.so"
-)
+        PROPERTIES
+        LINK_FLAGS
+        "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}//weexjsserver_version_script.txt -Wl,--no-undefined -Wl,-soname,libweexjss${SERVERSUFFIX}.so"
+        )
 
 #add_custom_command(
 #    TARGET ${WEEXJSSERVER_NAME}

@@ -141,7 +141,7 @@ android {
         versionName project.version
         if(buildSo) {
             ndk {
-                abiFilters 'arm64-v8a'
+                abiFilters "armeabi-v7a"
             }
 
             externalNativeBuild {

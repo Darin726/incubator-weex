@@ -1,0 +1,14 @@
+#cmake_minimum_required(VERSION 3.3)
+#if (POLICY CMP0042)
+#    cmake_policy(SET CMP0042 NEW)
+#endif ()
+
+cmake_minimum_required(VERSION 3.4.1)
+
+set(QUICKJS_NAME quickjs)
+
+add_library(${QUICKJS_NAME} SHARED
+
+        )
+
+target_include_directories(${QUICKJS_NAME} PUBLIC .)
