@@ -39,7 +39,7 @@
 #ifdef CONFIG_BIGNUM
 #include "libbf.h"
 #endif
-
+#include "log_defines.h"
 #define OPTIMIZE         1
 #define SHORT_OPCODES    1
 #if defined(EMSCRIPTEN)
@@ -6474,6 +6474,7 @@ JSValue JS_GetPropertyInternal(JSContext *ctx, JSValueConst obj,
         switch(tag) {
         case JS_TAG_NULL:
         case JS_TAG_UNDEFINED:
+            LOGE("dyyLog Here %s",JS_AtomToCString(ctx,prop));
             return JS_ThrowTypeError(ctx, "value has no property");
         case JS_TAG_EXCEPTION:
             return JS_EXCEPTION;
