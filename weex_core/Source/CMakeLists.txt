@@ -79,6 +79,8 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/wson)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/wson)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/json11)
 #link_directories(${LOCAL_LIBRARIES_DIR})
+# add quick js
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/quick_js)
 
 SET(FINAL_ADD_LIBRARY
         ${COMMON_SRCS}

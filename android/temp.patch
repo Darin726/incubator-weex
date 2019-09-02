@@ -1,0 +1,227 @@
+diff --git a/weex-playground b/weex-playground
+index b93e553eb..84b823654 160000
+--- a/weex-playground
++++ b/weex-playground
+@@ -1 +1 @@
+-Subproject commit b93e553ebf434baffa7d7f2f71f0a9f1e8cc9de1
++Subproject commit 84b82365466ca79cc01e8cf0bcbffc7aede36af0
+diff --git a/weex_core/Source/android/multiprocess/weex_js_connection.cpp b/weex_core/Source/android/multiprocess/weex_js_connection.cpp
+index 13dfb481a..193a10c9a 100644
+--- a/weex_core/Source/android/multiprocess/weex_js_connection.cpp
++++ b/weex_core/Source/android/multiprocess/weex_js_connection.cpp
+@@ -43,11 +43,7 @@
+ #include "third_party/IPC/IPCSender.h"
+ #include "third_party/IPC/IPCListener.h"
+ 
+-static bool s_in_find_icu = false;
+ static std::string g_crashFileName;
+-
+-volatile static bool fd_server_closed = false;
+-
+ static void doExec(int fdClient, int fdServer, bool traceEnable, bool startupPie);
+ 
+ static int copyFile(const char *SourceFile, const char *NewFile);
+@@ -56,13 +52,6 @@ static void closeAllButThis(int fd, int fd2);
+ 
+ static void printLogOnFile(const char *log);
+ 
+-static void closeServerFd(int fd) {
+-    if(fd_server_closed)
+-        return;
+-    close(fd);
+-    fd_server_closed = true;
+-}
+-
+ static bool checkOrCreateCrashFile(const char* file) {
+     if (file == nullptr) {
+         LOGE("checkOrCreateCrashFile Pass error file name!");
+@@ -151,8 +140,36 @@ WeexJSConnection::~WeexJSConnection() {
+   end();
+ }
+ 
++struct FDHolder {
++  int ipcClientFd;
++  int ipcServerFd;
++  bool serverHasBeenClosed;
++  bool clientHasBeenClosed;
++
++  void closeClient() {
++    if(clientHasBeenClosed) {
++      return;
++    }
++    close(ipcClientFd);
++    ipcClientFd = -1;
++  }
++
++  void closeServer() {
++    if(serverHasBeenClosed) {
++      return;
++    }
++    close(ipcServerFd);
++    ipcServerFd = -1;
++  }
++
++  void reset() {
++    closeClient();
++    closeServer();
++  }
++};
++
+ struct ThreadData {
+-    int ipcServerFd;
++    FDHolder *holder;
+     IPCHandler *ipcServerHandler;
+ };
+ // -1 unFinish, 0 error, 1 success
+@@ -162,17 +179,63 @@ enum NewThreadStatus {
+     SUCCESS
+ };
+ 
++static FDHolder fdHolder = {-1, -1, false};
++
+ static volatile int newThreadStatus = UNFINISH;
++static void *mmap_for_ipc(FDHolder *holder, bool client) {
++  pid_t pid = getpid();
++  std::string clientName(client ? "WEEX_IPC_CLIENT" : "WEEX_IPC_SERVER");
++  clientName += std::to_string(pid);
++  int fd = -1;
++  int initTimes = 1;
++  void *base = MAP_FAILED;
++  do {
++    fd = ashmem_create_region(clientName.c_str(), IPCFutexPageQueue::ipc_size);
++    if (-1 == fd) {
++      if (client) {
++        throw IPCException("failed to create ashmem region: %s", strerror(errno));
++      } else {
++        LOGE("failed to create ashmem region: %s", strerror(errno))
++      }
++    }
++    base = mmap(nullptr, IPCFutexPageQueue::ipc_size, PROT_READ | PROT_WRITE, MAP_SHARED,
++                      fd, 0);
++    if (base == MAP_FAILED) {
++      close(fd);
++      fd = -1;
++      int _errno = errno;
++      initTimes++;
++      if (_errno == EBADF || _errno == EACCES) {
++        LOGE("start map filed errno %d should retry", errno);
++        continue;
++      } else {
++        if (client) {
++          throw IPCException("start map filed errno %d", errno);
++        } else {
++          LOGE("start map filed errno %d", errno)
++        }
++        break;
++      }
++    }
++  } while ((initTimes <= 2) && base == MAP_FAILED);
++
++  if (client) {
++    holder->ipcClientFd = fd;
++  } else {
++    holder->ipcServerFd = fd;
++  }
++  return base;
++}
+ 
+ static void *newIPCServer(void *_td) {
+     ThreadData *td = static_cast<ThreadData *>(_td);
+-    void *base = mmap(nullptr, IPCFutexPageQueue::ipc_size, PROT_READ | PROT_WRITE, MAP_SHARED,
+-                      td->ipcServerFd, 0);
++    FDHolder *temp_holder = td->holder;
++    void *base = mmap_for_ipc(temp_holder, false);
++    int fd = temp_holder->ipcServerFd;
++
+     if (base == MAP_FAILED) {
+         LOGE("newIPCServer start map filed errno %d ", errno);
+         int _errno = errno;
+-        close(td->ipcServerFd);
+-        //throw IPCException("failed to map ashmem region: %s", strerror(_errno));
+         newThreadStatus = ERROR;
+         return nullptr;
+     }
+@@ -190,49 +253,33 @@ static void *newIPCServer(void *_td) {
+       listener->listen();
+     } catch (IPCException &e) {
+         LOGE("IPCException server died %s",e.msg());
+-        closeServerFd(td->ipcServerFd);
++        if(fd == temp_holder->ipcServerFd) {
++          temp_holder->closeServer();
++        }
+         base::android::DetachFromVM();
+         pthread_exit(NULL);
+     }
+     return nullptr;
+ }
+-static int s_memId = 0;
++
+ 
+ IPCSender *WeexJSConnection::start(IPCHandler *handler, IPCHandler *serverHandler, bool reinit) {
+-  pid_t pid = getpid();
+-  int id = __sync_fetch_and_add(&s_memId, 1);
+-  std::string clientName("WEEX_IPC_CLIENT-");
+-  clientName += std::to_string(pid);
+-  clientName += "-";
+-  clientName += std::to_string(id);
+-  int fd = ashmem_create_region(clientName.c_str(), IPCFutexPageQueue::ipc_size);
+-  if (-1 == fd) {
+-    throw IPCException("failed to create ashmem region: %s", strerror(errno));
+-  }
+-  void *base = mmap(nullptr, IPCFutexPageQueue::ipc_size, PROT_READ | PROT_WRITE, MAP_SHARED,
+-                    fd, 0);
+-  if (base == MAP_FAILED) {
+-    int _errno = errno;
+-    close(fd);
+-    throw IPCException("failed to map ashmem region: %s", strerror(_errno));
++  fdHolder.reset();
++
++  void *base = mmap_for_ipc(&fdHolder, true);
++
++  if(base == MAP_FAILED || base == nullptr) {
++    return nullptr;
+   }
++
+   std::unique_ptr<IPCFutexPageQueue> futexPageQueue(
+           new IPCFutexPageQueue(base, IPCFutexPageQueue::ipc_size, 0));
+   std::unique_ptr<IPCSender> sender(createIPCSender(futexPageQueue.get(), handler));
+   m_impl->serverSender = std::move(sender);
+   m_impl->futexPageQueue = std::move(futexPageQueue);
+-  std::string serverName("WEEX_IPC_SERVER-");
+-  serverName += std::to_string(pid);
+-  serverName += "-";
+-  serverName += std::to_string(id);
+-  int fd2 = ashmem_create_region(serverName.c_str(), IPCFutexPageQueue::ipc_size);
+-  if (-1 == fd2) {
+-    throw IPCException("failed to create ashmem region: %s", strerror(errno));
+-  }
+-  LOGE("weex create Client's Name is %s Server's name is %s",clientName.c_str(), serverName.c_str());
+-  fd_server_closed = false;
+-  ThreadData td = { static_cast<int>(fd2), static_cast<IPCHandler *>(serverHandler) };
+ 
++  fd_server_closed = false;
++  ThreadData td = { static_cast<FDHolder *>(&fdHolder), static_cast<IPCHandler *>(serverHandler) };
+   pthread_attr_t threadAttr;
+   newThreadStatus = UNFINISH;
+ 
+@@ -314,10 +361,6 @@ IPCSender *WeexJSConnection::start(IPCHandler *handler, IPCHandler *serverHandle
+       m_impl->futexPageQueue->spinWaitPeer();
+     } catch (IPCException &e) {
+       LOGE("WeexJSConnection catch: %s", e.msg());
+-      // TODO throw exception
+-      if(s_in_find_icu) {
+-//        WeexCore::WeexProxy::reportNativeInitStatus("-1013", "find icu timeout");
+-      }
+       return nullptr;
+     }
+   }
+@@ -436,9 +479,7 @@ void doExec(int fdClient, int fdServer, bool traceEnable, bool startupPie) {
+     LOGE("jss_icu_path not null %s",SoUtils::jss_icu_path());
+     icuDataPath = SoUtils::jss_icu_path();
+   } else {
+-    s_in_find_icu = true;
+     findIcuDataPath(icuDataPath);
+-    s_in_find_icu = false;
+   }
+ //  if(g_jssSoPath != nullptr) {
+ //    executablePath = g_jssSoPath;
