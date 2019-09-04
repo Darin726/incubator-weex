@@ -1481,7 +1481,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
         BundType type = BundType.Others;
         try {
           long start = System.currentTimeMillis();
-          type = getBundleType(instance.getBundleUrl(), template.getContent());
+//          type = getBundleType(instance.getBundleUrl(), template.getContent());
 
           if (WXEnvironment.isOpenDebugLog()) {
             long end = System.currentTimeMillis();
@@ -2624,14 +2624,14 @@ public class WXBridgeManager implements Callback, BactchExecutor {
       return IWXBridge.INSTANCE_RENDERING_ERROR;
     }
 
-    if (WXEnvironment.isApkDebugable() && BRIDGE_LOG_SWITCH) {
+    if (WXEnvironment.isApkDebugable() && true) {
       mLodBuilder.append("[WXBridgeManager] callAddElement >>>> pageId:").append(pageId)
               .append(", componentType:").append(componentType).append(", ref:").append(ref).append(", index:").append(index)
               .append(", parentRef:").append(parentRef)
               .append(", styles:").append(styles)
               .append(", attributes:").append(attributes)
               .append(", events:").append(events);
-      WXLogUtils.d(mLodBuilder.substring(0));
+      WXLogUtils.d("dyyLog" + mLodBuilder.substring(0));
       mLodBuilder.setLength(0);
     }
 
