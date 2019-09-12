@@ -1481,7 +1481,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
         BundType type = BundType.Others;
         try {
           long start = System.currentTimeMillis();
-//          type = getBundleType(instance.getBundleUrl(), template.getContent());
+          type = getBundleType(instance.getBundleUrl(), template.getContent());
 
           if (WXEnvironment.isOpenDebugLog()) {
             long end = System.currentTimeMillis();

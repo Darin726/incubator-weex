@@ -40,7 +40,7 @@ WeexRuntimeV2::WeexRuntimeV2(TimerQueue *timeQueue, WeexCore::ScriptBridge *scri
 //    initHeapTimer();
 
     //  });
-    WeexEnv::getEnv()->initJSC(isMultiProgress);
+//    WeexEnv::getEnv()->initJSC(isMultiProgress);
     WeexEnv::getEnv()->jsc_init_finished();
     WeexEnv::getEnv()->locker()->signal();
     //create vm

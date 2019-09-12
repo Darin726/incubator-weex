@@ -34,7 +34,7 @@ using namespace WEEXICU;
 
 
 WeexRuntime::WeexRuntime(TimerQueue* timeQueue,bool isMultiProgress) : is_multi_process_(isMultiProgress), script_bridge_(nullptr) {
-    WeexEnv::getEnv()->initJSC(isMultiProgress);
+//    WeexEnv::getEnv()->initJSC(isMultiProgress);
     m_globalVM = std::move(VM::create(LargeHeap));
 
     static bool wson_init_flag = false;

@@ -126,6 +126,7 @@ static void *startThread(void *td) {
         if (WeexEnv::getEnv()->isUseRunTimeApi()){
             LOGE("[weex_plan] new runtime");
             self->weexRuntime = new WeexRuntimeQuickJS(new TimerQueue(self),WeexEnv::getEnv()->scriptBridge(), self->isMultiProgress);
+//            self->weexRuntime = new WeexRuntimeV2(new TimerQueue(self),WeexEnv::getEnv()->scriptBridge(), self->isMultiProgress);
         } else{
             LOGE("[weex_plan] jsc");
         }
