@@ -1710,9 +1710,6 @@ public class WXBridgeManager implements Callback, BactchExecutor {
                 dataObj, apiObj, renderStrategy, extraOptionObj};
 
         instance.setTemplate(template.getContent());
-
-        instance.getApmForInstance().onStage(WXInstanceApm.KEY_PAGE_STAGES_LOAD_BUNDLE_END);
-
         // if { "framework": "Vue" } or  { "framework": "Rax" } will use invokeCreateInstanceContext
         // others will use invokeExecJS
         if (!isSandBoxContext) {
