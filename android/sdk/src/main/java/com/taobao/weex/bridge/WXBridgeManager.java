@@ -485,6 +485,15 @@ public class WXBridgeManager implements Callback, BactchExecutor {
     if (wxsdkInstance == null) {
       return null;
     }
+
+    if (wxsdkInstance.hasModuleIntercept(moduleStr)) {
+      WXSDKInstance.ModuleInterceptResult moduleInterceptResult
+              = wxsdkInstance.moduleIntercept(moduleStr, methodStr, args, options);
+      if(moduleInterceptResult != null && moduleInterceptResult.mIntercepted) {
+        return moduleInterceptResult.mResult;
+      }
+    }
+
     if (wxsdkInstance.isNeedValidate()
             && WXSDKManager.getInstance().getValidateProcessor() != null) {
       WXValidateProcessor.WXModuleValidateResult validateResult = WXSDKManager

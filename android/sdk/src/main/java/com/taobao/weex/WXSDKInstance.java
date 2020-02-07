@@ -41,6 +41,8 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ScrollView;
+
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.taobao.weex.adapter.IDrawableLoader;
 import com.taobao.weex.adapter.IWXConfigAdapter;
@@ -1948,6 +1950,11 @@ public class WXSDKInstance implements IWXActivityStateListener,View.OnLayoutChan
       if (null != mContentBoxMeasurements) {
         mContentBoxMeasurements.clear();
       }
+
+      if (!mModuleInterceptMap.isEmpty()) {
+        mModuleInterceptMap.clear();
+      }
+
       mWXPerformance.afterInstanceDestroy(mInstanceId);
 
       WXBridgeManager.getInstance().post(new Runnable() {
@@ -2496,5 +2503,52 @@ public class WXSDKInstance implements IWXActivityStateListener,View.OnLayoutChan
 
   public void setPageDirty(boolean mPageDirty) {
     this.mPageDirty = mPageDirty;
+  }
+
+  private ConcurrentHashMap<String,ModuleIntercept> mModuleInterceptMap = new ConcurrentHashMap();
+
+  public ModuleInterceptResult moduleIntercept(String moduleStr, String methodStr, JSONArray args, JSONObject options) {
+    ModuleIntercept moduleIntercept = mModuleInterceptMap.get(moduleStr);
+    if (moduleIntercept != null && moduleIntercept.callback != null) {
+      return moduleIntercept.callback.CallModuleMethod(moduleStr, methodStr, args, options);
+    }
+    return null;
+  }
+
+  public boolean hasModuleIntercept(String moduleName) {
+    return mModuleInterceptMap.containsKey(moduleName);
+  }
+  public void registerModuleIntercept(String moduleName, ModuleInterceptCallback callback) {
+    if (!TextUtils.isEmpty(moduleName)
+            && callback != null) {
+      mModuleInterceptMap.put(moduleName, new ModuleIntercept(moduleName, callback));
+    }
+  }
+
+  public void unRegisterModuleIntercept(String moduleName) {
+    mModuleInterceptMap.remove(moduleName);
+  }
+
+  public interface ModuleInterceptCallback {
+    public ModuleInterceptResult CallModuleMethod(String moduleStr, String methodStr, JSONArray args, JSONObject options);
+  }
+
+  public static class ModuleInterceptResult {
+    public boolean mIntercepted = false;
+    public Object mResult = null;
+    public ModuleInterceptResult(boolean intercepted, Object result) {
+      this.mIntercepted=intercepted;
+      this.mResult = result;
+    }
+  }
+
+  private static class ModuleIntercept {
+    public String moduleName;
+    public ModuleInterceptCallback callback;
+
+    public ModuleIntercept(String moduleName, ModuleInterceptCallback callback) {
+      this.moduleName = moduleName;
+      this.callback = callback;
+    }
   }
 }
