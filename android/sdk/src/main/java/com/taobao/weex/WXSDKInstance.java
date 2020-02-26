@@ -45,6 +45,7 @@ import android.widget.ScrollView;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.Feature;
 import com.taobao.weex.adapter.IDrawableLoader;
 import com.taobao.weex.adapter.IWXConfigAdapter;
 import com.taobao.weex.adapter.IWXHttpAdapter;
@@ -78,6 +79,7 @@ import com.taobao.weex.ui.component.WXComponent;
 import com.taobao.weex.ui.component.WXEmbed;
 import com.taobao.weex.ui.flat.FlatGUIContext;
 import com.taobao.weex.ui.view.WXScrollView;
+import com.taobao.weex.utils.FeatureSwitches;
 import com.taobao.weex.utils.Trace;
 import com.taobao.weex.utils.WXDeviceUtils;
 import com.taobao.weex.utils.WXExceptionUtils;
@@ -133,6 +135,7 @@ public class WXSDKInstance implements IWXActivityStateListener,View.OnLayoutChan
   public static String requestUrl = "requestUrl";
   private boolean isDestroy=false;
   private boolean hasException = false;
+  private boolean hasError = false;
   private boolean isRenderSuccess = false;
   private boolean createInstanceHeartBeat = false;
   private Map<String,Serializable> mUserTrackParams;
@@ -959,6 +962,19 @@ public class WXSDKInstance implements IWXActivityStateListener,View.OnLayoutChan
             return;
           }
 
+          if (hasError) {
+            //Has render error means js thread is working normally,
+            // So there is no need to restart jsEngine
+            String nameAndKey = "checkWeexRenderError";
+            boolean checkWeexRenderError = FeatureSwitches.isOpenWithConfig(nameAndKey,
+                    FeatureSwitches.NAMESPACE_EXT_CONFIG,
+                    nameAndKey,
+                    false);
+            if (checkWeexRenderError) {
+              return;
+            }
+          }
+
           // there is no need to reboot js engine if render by eagle
           if(isDataRender()) {
             return;
@@ -1757,6 +1773,7 @@ public class WXSDKInstance implements IWXActivityStateListener,View.OnLayoutChan
   }
 
   public void onRenderError(final String errCode, final String msg) {
+    hasError = true;
     WXStateRecord.getInstance().recordException(getInstanceId(),"onRenderError,"+errCode+","+msg);
     if (mRenderListener != null && mContext != null) {
       WXLogUtils.e("onRenderError "+errCode +","+msg);

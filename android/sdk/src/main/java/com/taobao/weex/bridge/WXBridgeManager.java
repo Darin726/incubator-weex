@@ -59,6 +59,7 @@ import com.taobao.weex.ui.WXRenderManager;
 import com.taobao.weex.ui.action.*;
 import com.taobao.weex.ui.component.WXComponent;
 import com.taobao.weex.ui.module.WXDomModule;
+import com.taobao.weex.utils.FeatureSwitches;
 import com.taobao.weex.utils.WXExceptionUtils;
 import com.taobao.weex.utils.WXFileUtils;
 import com.taobao.weex.utils.WXJsonUtils;
@@ -891,6 +892,24 @@ public class WXBridgeManager implements Callback, BactchExecutor {
         return IWXBridge.INSTANCE_RENDERING_ERROR;
       }
       reInitCount++;
+
+      if(isCrashFileEmpty) {
+        //No CreateInstance HeartBeat means JSThread may stop working,
+        // So renew a JSThread to restart Weex
+        String nameAndKey = "restartNewJSThread";
+        boolean restartNewJSThread = FeatureSwitches.isOpenWithConfig(nameAndKey,
+                FeatureSwitches.NAMESPACE_EXT_CONFIG,
+                nameAndKey,
+                false);
+        if(restartNewJSThread) {
+          mJSThread.quit();
+          mJSThread = null;
+          mJSHandler = null;
+          mJSThread = new WXThread("WeexJSBridgeThread"+reInitCount, this);
+          mJSHandler = mJSThread.getHandler();
+        }
+      }
+
       // reinit frame work
       setJSFrameworkInit(false);
       WXModuleManager.resetAllModuleState();
