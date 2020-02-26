@@ -21,6 +21,7 @@ package com.taobao.weex;
 import android.support.annotation.NonNull;
 import com.taobao.weex.adapter.ClassLoaderAdapter;
 import com.taobao.weex.adapter.IDrawableLoader;
+import com.taobao.weex.adapter.IWXFoldDeviceAdapter;
 import com.taobao.weex.adapter.IWXHttpAdapter;
 import com.taobao.weex.adapter.IWXImgLoaderAdapter;
 import com.taobao.weex.adapter.IWXJSExceptionAdapter;
@@ -53,12 +54,15 @@ public class InitConfig {
   private IApmGenerator apmGenerater;
   private IWXJsFileLoaderAdapter jsFileLoaderAdapter;
   private IWXJscProcessManager jscProcessManager;
+  private IWXFoldDeviceAdapter foldDeviceAdapter;
   private List<String> nativeLibraryList;
 
   public IWXHttpAdapter getHttpAdapter() {
     return httpAdapter;
   }
-
+  public IWXFoldDeviceAdapter getFoldDeviceAdapter() {
+    return foldDeviceAdapter;
+  }
   public IWXImgLoaderAdapter getImgAdapter() {
     return imgAdapter;
   }
@@ -139,6 +143,7 @@ public class InitConfig {
     ClassLoaderAdapter classLoaderAdapter;
     IApmGenerator apmGenerater;
     private IWXJsFileLoaderAdapter jsFileLoaderAdapter;
+    private IWXFoldDeviceAdapter foldDeviceAdapter;
     private List<String> nativeLibraryList = new LinkedList<>();
 
     public IWXJscProcessManager getJscProcessManager() {
@@ -173,6 +178,11 @@ public class InitConfig {
 
     public Builder setUtAdapter(IWXUserTrackAdapter utAdapter) {
       this.utAdapter = utAdapter;
+      return this;
+    }
+
+    public Builder setFoldDeviceAdapter(IWXFoldDeviceAdapter foldDeviceAdapter) {
+      this.foldDeviceAdapter = foldDeviceAdapter;
       return this;
     }
 
@@ -243,6 +253,7 @@ public class InitConfig {
       config.jsFileLoaderAdapter = this.jsFileLoaderAdapter;
       config.jscProcessManager = this.jscProcessManager;
       config.nativeLibraryList = this.nativeLibraryList;
+      config.foldDeviceAdapter = this.foldDeviceAdapter;
       return config;
     }
   }

@@ -16,21 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.taobao.weex.utils;
+package com.taobao.weex.adapter;
 
-import android.content.Context;
-
-import com.taobao.weex.WXSDKManager;
-import com.taobao.weex.adapter.IWXFoldDeviceAdapter;
-
-public class WXDeviceUtils {
-    public static boolean isAutoResize(Context context) {
-        IWXFoldDeviceAdapter wxFoldDeviceAdapter = WXSDKManager.getInstance().getWXFoldDeviceAdapter();
-        if (wxFoldDeviceAdapter == null) {
-            return false;
-        }
-
-        return wxFoldDeviceAdapter.isFoldDevice() || wxFoldDeviceAdapter.isMateX() || wxFoldDeviceAdapter.isGalaxyFold();
-    }
-
+public interface IWXFoldDeviceAdapter {
+    boolean isFoldDevice();
+    boolean isMateX();
+    boolean isGalaxyFold();
 }

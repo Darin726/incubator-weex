@@ -24,11 +24,13 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.taobao.weex.adapter.ClassLoaderAdapter;
+import com.taobao.weex.adapter.DefaultFoldDeviceAdapter;
 import com.taobao.weex.adapter.DefaultUriAdapter;
 import com.taobao.weex.adapter.DefaultWXHttpAdapter;
 import com.taobao.weex.adapter.IWXConfigAdapter;
 import com.taobao.weex.adapter.ICrashInfoReporter;
 import com.taobao.weex.adapter.IDrawableLoader;
+import com.taobao.weex.adapter.IWXFoldDeviceAdapter;
 import com.taobao.weex.adapter.IWXJscProcessManager;
 import com.taobao.weex.adapter.ITracingAdapter;
 import com.taobao.weex.adapter.IWXAccessibilityRoleAdapter;
@@ -102,6 +104,9 @@ public class WXSDKManager {
   private ITracingAdapter mTracingAdapter;
   private WXValidateProcessor mWXValidateProcessor;
   private IWXJscProcessManager mWXJscProcessManager;
+
+  private IWXFoldDeviceAdapter mWXFoldDeviceAdapter = null;
+
   // Tell weexv8 to initialize v8, default is true.
   private boolean mNeedInitV8 = true;
 
@@ -415,6 +420,7 @@ public class WXSDKManager {
     this.mApmGenerater = config.getApmGenerater();
     this.mWXJsFileLoaderAdapter = config.getJsFileLoaderAdapter();
     this.mWXJscProcessManager = config.getJscProcessManager();
+    this.mWXFoldDeviceAdapter = config.getFoldDeviceAdapter();
   }
 
   public IWXStorageAdapter getIWXStorageAdapter(){
@@ -524,6 +530,16 @@ public class WXSDKManager {
     this.mNavigator = mNavigator;
   }
 
+  public IWXFoldDeviceAdapter getWXFoldDeviceAdapter() {
+    if(mWXFoldDeviceAdapter == null) {
+      mWXFoldDeviceAdapter = new DefaultFoldDeviceAdapter();
+    }
+    return mWXFoldDeviceAdapter;
+  }
+
+  public void setWXFoldDeviceAdapter(IWXFoldDeviceAdapter mWXFoldDeviceAdapter) {
+    this.mWXFoldDeviceAdapter = mWXFoldDeviceAdapter;
+  }
 
   private FontAdapter mFontAdapter;
 
