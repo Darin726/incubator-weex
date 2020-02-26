@@ -19,12 +19,11 @@
 package com.taobao.weex.ui;
 
 import android.text.TextUtils;
-import android.util.Log;
 
+import com.taobao.weex.WXEaglePluginManager;
 import com.taobao.weex.WXSDKManager;
 import com.taobao.weex.bridge.WXBridgeManager;
 import com.taobao.weex.common.WXException;
-import com.taobao.weex.ui.config.AutoScanConfigRegister;
 import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.cache.RegisterCache;
 
@@ -32,7 +31,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -78,7 +76,7 @@ public class WXComponentRegistry {
     if (holder == null || TextUtils.isEmpty(type)) {
       return false;
     }
-
+    WXEaglePluginManager.getInstance().registerComponent(type, holder, componentInfo);
     if(RegisterCache.getInstance().cacheComponent(type,holder,componentInfo)) {
       return true;
     }
@@ -108,7 +106,7 @@ public class WXComponentRegistry {
     return true;
   }
 
-  private static boolean registerNativeComponent(String type, IFComponentHolder holder) throws WXException {
+  static boolean registerNativeComponent(String type, IFComponentHolder holder) throws WXException {
     try {
       holder.loadIfNonLazy();
       sTypeComponentMap.put(type, holder);

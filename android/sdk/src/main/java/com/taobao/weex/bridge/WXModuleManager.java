@@ -24,17 +24,16 @@ import android.text.TextUtils;
 import android.view.Menu;
 
 import com.alibaba.fastjson.JSONArray;
+import com.taobao.weex.WXEaglePluginManager;
 import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.WXSDKManager;
 import com.taobao.weex.adapter.IWXUserTrackAdapter;
 import com.taobao.weex.common.Destroyable;
-import com.taobao.weex.common.WXErrorCode;
 import com.taobao.weex.common.WXException;
 import com.taobao.weex.common.WXModule;
 import com.taobao.weex.ui.config.ConfigModuleFactory;
 import com.taobao.weex.ui.module.WXDomModule;
 import com.taobao.weex.ui.module.WXTimerModule;
-import com.taobao.weex.utils.WXExceptionUtils;
 import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.cache.RegisterCache;
 
@@ -133,7 +132,7 @@ public class WXModuleManager {
       WXLogUtils.e("Cannot registered module with name 'dom'.");
       return false;
     }
-
+    WXEaglePluginManager.getInstance().registerModule(moduleName, factory, global);
     if(RegisterCache.getInstance().cacheModule(moduleName,factory,global)) {
       return true;
     }
