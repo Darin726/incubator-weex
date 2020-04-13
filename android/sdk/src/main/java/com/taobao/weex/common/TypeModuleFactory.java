@@ -18,6 +18,8 @@
  */
 package com.taobao.weex.common;
 
+import android.text.TextUtils;
+
 import com.taobao.weex.WXEnvironment;
 import com.taobao.weex.annotation.JSMethod;
 import com.taobao.weex.bridge.Invoker;
@@ -30,6 +32,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Use class
@@ -39,9 +42,58 @@ public class TypeModuleFactory<T extends WXModule> implements ModuleFactory<T> {
   public static final String TAG = "TypeModuleFactory";
   Class<T> mClazz;
   Map<String, Invoker> mMethodMap;
+  private Map<String,Boolean> methodCheckMap = new ConcurrentHashMap<>();
 
+  /*
+      avoid rebuild repeatedly
+     */
+  private boolean mHasRebuild = false;
   public TypeModuleFactory(Class<T> clz) {
     mClazz = clz;
+  }
+
+  public String className() {
+    return mClazz == null ? "" : mClazz.getName();
+  }
+  public boolean hasRebuild() {
+    return mHasRebuild;
+  }
+
+  public void reBuildMethodMap() {
+    if (mHasRebuild) {
+      return;
+    }
+    mHasRebuild = true;
+    generateMethodMap();
+  }
+
+  /**
+   * check method is in Class's method list, then cache in Map;
+   * @param methodStr method name
+   * @return true means mClass has method, or false means not.
+   */
+  public boolean hasMethodInClass(String methodStr) {
+    if (TextUtils.isEmpty(methodStr)) {
+      return false;
+    }
+    boolean has = false;
+    Boolean hasCache = methodCheckMap.get(methodStr);
+    if (hasCache != null) {
+      return hasCache;
+    }
+    try {
+      Method[] methods = mClazz.getMethods();
+      for (Method method : methods) {
+        if (method != null && TextUtils.equals(methodStr, method.getName())) {
+          for (Annotation anno : method.getDeclaredAnnotations()) {
+            has = anno instanceof JSMethod || anno instanceof WXModuleAnno;
+          }
+        }
+      }
+    } catch (Throwable e) {
+    }
+    methodCheckMap.put(methodStr, has);
+    return has;
   }
 
   private void generateMethodMap() {

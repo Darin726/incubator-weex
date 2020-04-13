@@ -984,7 +984,7 @@ public class WXSDKInstance implements IWXActivityStateListener,View.OnLayoutChan
           if(containerView instanceof ViewGroup) {
             if(0 == ((ViewGroup) containerView).getChildCount()) {
               if(wxJscProcessManager.withException(WXSDKInstance.this)) {
-                onJSException(String.valueOf(WX_ERR_RELOAD_PAGE),"jsc reboot","jsc reboot");
+                onJSException(String.valueOf(WX_ERR_RELOAD_PAGE),"white screen","No View in Container");
               }
               if(!createInstanceHeartBeat) {
                   WXBridgeManager.getInstance().callReportCrashReloadPage(mInstanceId, null);

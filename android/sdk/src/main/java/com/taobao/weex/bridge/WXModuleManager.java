@@ -29,11 +29,14 @@ import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.WXSDKManager;
 import com.taobao.weex.adapter.IWXUserTrackAdapter;
 import com.taobao.weex.common.Destroyable;
+import com.taobao.weex.common.TypeModuleFactory;
+import com.taobao.weex.common.WXErrorCode;
 import com.taobao.weex.common.WXException;
 import com.taobao.weex.common.WXModule;
 import com.taobao.weex.ui.config.ConfigModuleFactory;
 import com.taobao.weex.ui.module.WXDomModule;
 import com.taobao.weex.ui.module.WXTimerModule;
+import com.taobao.weex.utils.WXExceptionUtils;
 import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.cache.RegisterCache;
 
@@ -202,7 +205,12 @@ public class WXModuleManager {
   }
 
   static Object callModuleMethod(final String instanceId, String moduleStr, String methodStr, JSONArray args) {
-    ModuleFactory factory = sModuleFactoryMap.get(moduleStr).mFactory;
+    ModuleFactoryImpl moduleFactory = sModuleFactoryMap.get(moduleStr);
+    if (moduleFactory == null) {
+      WXLogUtils.e("[WXModuleManager] module factoryImpl not found.");
+      return null;
+    }
+    ModuleFactory factory = moduleFactory.mFactory;
     if(factory == null){
       WXLogUtils.e("[WXModuleManager] module factory not found.");
       return null;
@@ -214,7 +222,49 @@ public class WXModuleManager {
     WXSDKInstance instance = WXSDKManager.getInstance().getSDKInstance(instanceId);
     wxModule.mWXSDKInstance = instance;
 
-    final Invoker invoker = factory.getMethodInvoker(methodStr);
+    Invoker invokerTemp = factory.getMethodInvoker(methodStr);
+
+    if (invokerTemp == null) {
+      StringBuilder ErrorMsg = new StringBuilder("CallNativeModule Failed For ")
+              .append(moduleStr)
+              .append(":")
+              .append(methodStr)
+              .append("'s invoker is null");
+      try {
+        if (factory instanceof TypeModuleFactory) {
+          TypeModuleFactory f = ((TypeModuleFactory) factory);
+          if (!f.hasRebuild() && f.hasMethodInClass(methodStr)) {
+            ErrorMsg.append(" but has ").append(methodStr).append(" and rebuilding...");
+            f.reBuildMethodMap();
+          } else {
+            ErrorMsg.append(" do not has ").append(methodStr);
+          }
+
+          invokerTemp = factory.getMethodInvoker(methodStr);
+            ErrorMsg.append(" And Class Name is ").append(f.className());
+          if (invokerTemp == null) {
+            ErrorMsg.append(" and rebuild Method Map Failed");
+          } else {
+            ErrorMsg.append(" and rebuild Method Map Succeed, Continue Call Native Module");
+          }
+        }
+      } catch (Throwable e) {
+        ErrorMsg.append(" Throw Exception ").append(e.getMessage());
+      }
+
+      WXLogUtils.e(ErrorMsg.toString());
+      WXExceptionUtils.commitCriticalExceptionRT(instanceId,
+              WXErrorCode.WX_RENDER_ERR_CALL_NATIVE_MODULE,
+              "callModuleMethod",
+              ErrorMsg.toString(), null);
+    }
+
+    final Invoker invoker = invokerTemp;
+
+    if (invoker == null) {
+      return null;
+    }
+
     try {
       if(instance != null) {
         IWXUserTrackAdapter userTrackAdapter = WXSDKManager.getInstance().getIWXUserTrackAdapter();
