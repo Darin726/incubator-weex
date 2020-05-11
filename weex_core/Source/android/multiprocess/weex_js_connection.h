@@ -43,7 +43,7 @@ class WeexConnInfo {
   }
 
   void *mmap_for_ipc();
-
+  int ashmem_create_region_inner(const char* name, size_t size);
   void closeFd() {
     if(ipcFd == -1) {
       return;

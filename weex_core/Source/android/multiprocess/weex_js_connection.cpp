@@ -42,6 +42,12 @@
 #include "third_party/IPC/IPCException.h"
 #include "third_party/IPC/IPCSender.h"
 #include "third_party/IPC/IPCListener.h"
+#include <android/sharedmem.h>
+#include <android/sharedmem_jni.h>
+#include <dlfcn.h>
+#include <linux/ashmem.h>
+#include <string.h>
+#include <android/api-level.h>
 
 static bool s_in_find_icu = false;
 static std::string g_crashFileName;
@@ -616,7 +622,7 @@ void *WeexConnInfo::mmap_for_ipc() {
   int initTimes = 1;
   void *base = MAP_FAILED;
   do {
-    fd = ashmem_create_region(fileName.c_str(), IPCFutexPageQueue::ipc_size);
+    fd = ashmem_create_region_inner(fileName.c_str(), IPCFutexPageQueue::ipc_size);
     if (-1 == fd) {
       if (this->is_client) {
         throw IPCException("failed to create ashmem region: %s", strerror(errno));
@@ -648,3 +654,44 @@ void *WeexConnInfo::mmap_for_ipc() {
   this->ipcFd = fd;
   return base;
 }
+
+typedef int (*AShmem_create_t_o)(const char *name, size_t size);
+int WeexConnInfo::ashmem_create_region_inner(const char *name, size_t size) {
+  if(SoUtils::android_api() < __ANDROID_API_O__) {
+    return ashmem_create_region(name,size);
+  }
+
+  static auto handle = dlopen("libandroid.so", RTLD_LAZY | RTLD_LOCAL);
+  if (handle == RTLD_DEFAULT) {
+    return -1;
+  }
+  int fd, ret;
+  static AShmem_create_t_o funcPtr =
+      (handle != nullptr) ? reinterpret_cast<AShmem_create_t_o>(dlsym(handle, "ASharedMemory_create"))
+                          : nullptr;
+  if (funcPtr) {
+    fd = funcPtr(name, size);
+
+    if (fd < 0)
+      return fd;
+
+    if (name) {
+      char buf[ASHMEM_NAME_LEN];
+
+      strlcpy(buf, name, sizeof(buf));
+      ret = ioctl(fd, ASHMEM_SET_NAME, buf);
+      if (ret < 0)
+        goto error;
+    }
+
+    ret = ioctl(fd, ASHMEM_SET_SIZE, size);
+    if (ret < 0)
+      goto error;
+
+    return fd;
+  }
+  error:
+  close(fd);
+  return ret;
+  }
+
