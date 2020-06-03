@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+#include <dirent.h>
 #include "android/jsengine/weex_ipc_server.h"
 #include "android/jsengine/bridge/platform/platform_side_multi_process.h"
 #include "android/jsengine/bridge/platform/platform_bridge_in_multi_process.h"
@@ -46,15 +47,74 @@ struct WeexJSServer::WeexJSServerImpl {
     std::unique_ptr<IPCSerializer> serializer;
 };
 
+static void closeAllButThis(int exceptfd, int fd2) {
+    DIR *dir = opendir("/proc/self/fd");
+    if (!dir) {
+        return;
+    }
+    int dirFd = dirfd(dir);
+    struct dirent *cur;
+    struct timespec start;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    while ((cur = readdir(dir))) {
+        struct timespec now;
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        if ((now.tv_sec - start.tv_sec) > 6) {
+            break;
+        }
+        if (!strcmp(cur->d_name, ".")
+            || !strcmp(cur->d_name, "..")) {
+            continue;
+        }
+        errno = 0;
+        unsigned long curFd = strtoul(cur->d_name, nullptr, 10);
+        __android_log_print(ANDROID_LOG_ERROR,"dyy","aaaaa print name %s fd %d",cur->d_name, curFd);
+        if (errno)
+            continue;
+        if (curFd <= 2)
+            continue;
+    }
+}
+
+
+static void findIcuDataPath() {
+    FILE *f = fopen("/proc/self/maps", "r");
+    if (!f) {
+        return;
+    }
+    fseek(f,0L,SEEK_END);
+    int size=ftell(f);
+
+//    LOGD("file size is %d",size);
+    struct stat statbuf;
+    stat("/proc/self/maps",&statbuf);
+    int size1=statbuf.st_size;
+//    LOGD("file size1 is %d",size1);
+    char buffer[256];
+    char *line;
+    while ((line = fgets(buffer, 256, f))) {
+        __android_log_print(ANDROID_LOG_ERROR,"dyy","aaaa line %s ", line);
+    }
+    fclose(f);
+    return;
+}
+
 WeexJSServer::WeexJSServerImpl::WeexJSServerImpl(int serverFd, int clientFd, bool enableTrace, std::string crashFileName) {
     WeexEnv::getEnv()->setIpcServerFd(serverFd);
     WeexEnv::getEnv()->setIpcClientFd(clientFd);
     WeexEnv::getEnv()->setEnableTrace(enableTrace);
     int _fd = serverFd;
+    __android_log_print(ANDROID_LOG_ERROR,"dyy","mmap fd  1 serverFd=%d clientFd=%d",serverFd, clientFd);
+    closeAllButThis(1,1);
+    int i = fcntl(_fd, F_GETFD);
+//    findIcuDataPath();
+    __android_log_print(ANDROID_LOG_ERROR,"dyy","fcntl fcntl ret = %d %s", i,strerror(errno));
+
     void *base = mmap(nullptr, IPCFutexPageQueue::ipc_size, PROT_READ | PROT_WRITE, MAP_SHARED, _fd, 0);
     if (base == MAP_FAILED) {
         int _errno = errno;
         close(_fd);
+        __android_log_print(ANDROID_LOG_ERROR,"dyy","mmap Failed  1 %s",strerror(_errno));
         //throw IPCException("failed to map ashmem region: %s", strerror(_errno));
     }
     close(_fd);

@@ -49,7 +49,6 @@
 #include <string.h>
 #include <android/api-level.h>
 
-static bool s_in_find_icu = false;
 static std::string g_crashFileName;
 
 static void doExec(int fdClient, int fdServer, bool traceEnable, bool startupPie);
@@ -196,6 +195,7 @@ static void *newIPCServer(void *_td) {
     }
     WeexCore::WeexCoreManager::Instance()->server_queue_= nullptr;
     if (WeexCoreManager::Instance()->do_release_map()){
+      __android_log_print(ANDROID_LOG_ERROR,"dyy","do_release_mapl");
         futexPageQueue.reset();
     }
     return nullptr;
@@ -265,6 +265,9 @@ IPCSender *WeexJSConnection::start(bool reinit) {
   LOGE("startupPie :%d", startupPie);
 
   pid_t child;
+  int pifiledescritor[2] = {client_->ipcFd, server_->ipcFd};
+  pipe(pifiledescritor);
+  __android_log_print(ANDROID_LOG_ERROR,"dyy","pip pip pip pip pip %d %d",pifiledescritor[0],pifiledescritor[1]);
   if (reinit) {
 #if PRINT_LOG_CACHEFILE
     mcfile << "reinit is ture use vfork" << std::endl;
@@ -283,11 +286,12 @@ IPCSender *WeexJSConnection::start(bool reinit) {
     munmap(base, IPCFutexPageQueue::ipc_size);
     throw IPCException("failed to fork: %s", strerror(myerrno));
   } else if (child == 0) {
-    LOGE("weexcore fork child success\n");
+//    LOGE("weexcore fork child success\n");
     // the child
     closeAllButThis(client_->ipcFd, server_->ipcFd);
     // implements close all but handles[1]
     // do exec
+    __android_log_print(ANDROID_LOG_ERROR,"dyy","start sonProcess serverFd=%d clientFd=%d",server_->ipcFd, client_->ipcFd);
     doExec(client_->ipcFd, server_->ipcFd, true, startupPie);
     LOGE("exec Failed completely.");
     // failed to exec
@@ -300,9 +304,6 @@ IPCSender *WeexJSConnection::start(bool reinit) {
     } catch (IPCException &e) {
       LOGE("WeexJSConnection catch: %s", e.msg());
       // TODO throw exception
-      if(s_in_find_icu) {
-//        WeexCore::WeexProxy::reportNativeInitStatus("-1013", "find icu timeout");
-      }
       return nullptr;
     }
   }
@@ -352,22 +353,20 @@ static void findIcuDataPath(std::string &icuDataPath) {
   fseek(f,0L,SEEK_END);
   int size=ftell(f);
 
-    LOGD("file size is %d",size);
+//    LOGD("file size is %d",size);
     struct stat statbuf;
     stat("/proc/self/maps",&statbuf);
     int size1=statbuf.st_size;
-    LOGD("file size1 is %d",size1);
+//    LOGD("file size1 is %d",size1);
   char buffer[256];
   char *line;
   while ((line = fgets(buffer, 256, f))) {
-    if (icuDataPath.empty() && strstr(line, "icudt")) {
-      icuDataPath.assign(strstr(line, "/"));
-      icuDataPath = icuDataPath.substr(0, icuDataPath.length() - 1);
-    }
+//    if (icuDataPath.empty() && strstr(line, "icudt")) {
+//      icuDataPath.assign(strstr(line, "/"));
+//      icuDataPath = icuDataPath.substr(0, icuDataPath.length() - 1);
+//    }
 
-    if (!icuDataPath.empty()) {
-      break;
-    }
+    __android_log_print(ANDROID_LOG_ERROR,"dyy","line %s ", line);
   }
   fclose(f);
   return;
@@ -419,13 +418,12 @@ void doExec(int fdClient, int fdServer, bool traceEnable, bool startupPie) {
   std::string executablePath;
   std::string icuDataPath;
   if(SoUtils::jss_icu_path() != nullptr) {
-    LOGD("jss_icu_path not null %s",SoUtils::jss_icu_path());
+//    LOGD("jss_icu_path not null %s",SoUtils::jss_icu_path());
     icuDataPath = SoUtils::jss_icu_path();
-  } else {
-    s_in_find_icu = true;
-    findIcuDataPath(icuDataPath);
-    s_in_find_icu = false;
+    __android_log_print(ANDROID_LOG_ERROR,"dyy","icuData:%s",SoUtils::jss_icu_path());
   }
+//    findIcuDataPath(icuDataPath);
+
 //  if(g_jssSoPath != nullptr) {
 //    executablePath = g_jssSoPath;
   if(SoUtils::jss_so_path() != nullptr) {
@@ -446,7 +444,7 @@ void doExec(int fdClient, int fdServer, bool traceEnable, bool startupPie) {
     executablePath.replace(pos, libName.length(), "");
 
   if (executablePath.empty()) {
-    LOGE("executablePath is empty");
+//    LOGE("executablePath is empty");
 
 #if PRINT_LOG_CACHEFILE
     mcfile << "jsengine WeexJSConnection::doExec executablePath is empty and return" << std::endl;
@@ -455,10 +453,10 @@ void doExec(int fdClient, int fdServer, bool traceEnable, bool startupPie) {
 
     return;
   } else {
-    LOGE("executablePath is %s", executablePath.c_str());
+//    LOGE("executablePath is %s", executablePath.c_str());
   }}
   if (icuDataPath.empty()) {
-    LOGE("icuDataPath is empty");
+//    LOGE("icuDataPath is empty");
 #if PRINT_LOG_CACHEFILE
     mcfile << "jsengine WeexJSConnection::doExec icuDataPath is empty and return" << std::endl;
     mcfile.close();
@@ -508,7 +506,7 @@ void doExec(int fdClient, int fdServer, bool traceEnable, bool startupPie) {
     chmod(executableName.c_str(), 0755);
     int result = access(executableName.c_str(), 01);
 
-    LOGE("doExec access result %d executableName %s \n", result, executableName.c_str());
+//    LOGE("doExec access result %d executableName %s \n", result, executableName.c_str());
 #if PRINT_LOG_CACHEFILE
     mcfile << "jsengine WeexJSConnection::doExec file exist result:"
            << result << " startupPie:" << startupPie << std::endl;
@@ -581,15 +579,17 @@ static void closeAllButThis(int exceptfd, int fd2) {
     }
     errno = 0;
     unsigned long curFd = strtoul(cur->d_name, nullptr, 10);
+    __android_log_print(ANDROID_LOG_ERROR,"dyy","print name %s fd %d",cur->d_name, curFd);
     if (errno)
       continue;
     if (curFd <= 2)
       continue;
     if ((curFd != dirFd) && (curFd != exceptfd) && (curFd != fd2)) {
-      close(curFd);
+//      close(curFd);
     }
+
   }
-  closedir(dir);
+//  closedir(dir);
 }
 
 int copyFile(const char *SourceFile, const char *NewFile) {
@@ -639,13 +639,13 @@ void *WeexConnInfo::mmap_for_ipc() {
       int _errno = errno;
       initTimes++;
       if (_errno == EBADF || _errno == EACCES) {
-        LOGE("start map filed errno %d should retry", errno);
+        LOGE("dyy start map filed errno %d should retry", errno);
         continue;
       } else {
         if (this->is_client) {
           throw IPCException("start map filed errno %d", errno);
         } else {
-          LOGE("start map filed errno %d", errno)
+          LOGE("dyy start map filed errno %d", errno)
         }
         break;
       }
@@ -656,6 +656,9 @@ void *WeexConnInfo::mmap_for_ipc() {
 }
 
 typedef int (*AShmem_create_t_o)(const char *name, size_t size);
+typedef int (*ASharedMemory_setProt_o)(int fd, int prot);
+
+
 int WeexConnInfo::ashmem_create_region_inner(const char *name, size_t size) {
   if(SoUtils::android_api() < __ANDROID_API_O__) {
     return ashmem_create_region(name,size);
@@ -675,22 +678,30 @@ int WeexConnInfo::ashmem_create_region_inner(const char *name, size_t size) {
     if (fd < 0)
       return fd;
 
-    if (name) {
-      char buf[ASHMEM_NAME_LEN];
+    static ASharedMemory_setProt_o funcSetProt =  reinterpret_cast<ASharedMemory_setProt_o>(dlsym(handle, "ASharedMemory_setProt"));
 
-      strlcpy(buf, name, sizeof(buf));
-      ret = ioctl(fd, ASHMEM_SET_NAME, buf);
-      if (ret < 0)
-        goto error;
+    if(!funcSetProt) {
+      return -1;
     }
 
-    ret = ioctl(fd, ASHMEM_SET_SIZE, size);
-    if (ret < 0)
-      goto error;
+    funcSetProt(fd, PROT_READ | PROT_WRITE | PROT_EXEC);
+//    if (name) {
+//      char buf[ASHMEM_NAME_LEN];
+//
+//      strlcpy(buf, name, sizeof(buf));
+//      ret = ioctl(fd, ASHMEM_SET_NAME, buf);
+//      if (ret < 0)
+//        goto error;
+//    }
+//
+//    ret = ioctl(fd, ASHMEM_SET_SIZE, size);
+//    if (ret < 0)
+//      goto error;
 
     return fd;
   }
   error:
+  __android_log_print(ANDROID_LOG_ERROR,"dyy","close fd");
   close(fd);
   return ret;
   }
