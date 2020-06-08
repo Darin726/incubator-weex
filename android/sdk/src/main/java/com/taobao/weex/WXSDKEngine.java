@@ -161,9 +161,9 @@ public class WXSDKEngine implements Serializable {
    */
   public static void initialize(Application application,InitConfig config){
     synchronized (mLock) {
-      if (mIsInit) {
-        return;
-      }
+//      if (mIsInit) {
+//        return;
+//      }
       long start = System.currentTimeMillis();
       WXEnvironment.sSDKInitStart = start;
       if(WXEnvironment.isApkDebugable(application)){
@@ -175,7 +175,7 @@ public class WXSDKEngine implements Serializable {
       registerApplicationOptions(application);
       WXEnvironment.sSDKInitInvokeTime = System.currentTimeMillis()-start;
       WXLogUtils.renderPerformanceLog("SDKInitInvokeTime", WXEnvironment.sSDKInitInvokeTime);
-      mIsInit = true;
+//      mIsInit = true;
     }
   }
 
