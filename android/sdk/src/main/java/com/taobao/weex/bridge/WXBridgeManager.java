@@ -342,6 +342,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
 
   private void setJSFrameworkInit(boolean init) {
     mInit = init;
+    WXSDKEngine.setInit(init);
     WXStateRecord.getInstance().recoreJsfmInitHistory("setJsfmInitFlag:"+init);
     if (init == true) {
       onJsFrameWorkInitSuccees();
