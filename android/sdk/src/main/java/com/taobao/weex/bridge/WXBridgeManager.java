@@ -2287,6 +2287,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
   }
 
   private WXParams assembleDefaultOptions() {
+    Log.e("preInstall","assembleDefaultOptions start");
     checkJsEngineMultiThread();
 
     Map<String, String> config = WXEnvironment.getConfig();
@@ -2324,7 +2325,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
     if (!WXEnvironment.sUseRunTimeApi){
       customOptions.put("__enable_native_promise__","true");
     }
-
+    Log.e("preInstall","adapter start");
     String enableAlarmSignal = "true";
     IWXConfigAdapter adapter = WXSDKManager.getInstance().getWxConfigAdapter();
     if (null != adapter){
@@ -2340,6 +2341,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
         e.printStackTrace();
       }
     }
+    Log.e("preInstall","adapter end");
     if (null != enableAlarmSignal){
       customOptions.put("enableAlarmSignal",enableAlarmSignal);
     }
@@ -2348,6 +2350,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
     wxParams.setOptions(customOptions);
     wxParams.setNeedInitV8(WXSDKManager.getInstance().needInitV8());
     mInitParams = wxParams;
+    Log.e("preInstall","assembleDefaultOptions end");
     return wxParams;
   }
 

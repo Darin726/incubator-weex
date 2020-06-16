@@ -159,13 +159,17 @@ import java.util.Map;
 
   @Override
   public int initFrameworkEnv(String framework, WXParams params, String cacheDir, boolean pieSupport) {
+    Log.e("preInstall","initFrameworkEnv initFrameworkEnv start");
+    int i;
     if (MULTIPROCESS) {
       WXStateRecord.getInstance().recordAction("","nativeInitFrameworkEnv:");
-      return nativeInitFrameworkEnv(framework, params, cacheDir, pieSupport);
+      i= nativeInitFrameworkEnv(framework, params, cacheDir, pieSupport);
     } else {
       WXStateRecord.getInstance().recordAction("","nativeInitFramework:");
-      return nativeInitFramework(framework, params);
+      i= nativeInitFramework(framework, params);
     }
+    Log.e("preInstall","initFrameworkEnv initFrameworkEnv end");
+    return i;
   }
 
   @Override
