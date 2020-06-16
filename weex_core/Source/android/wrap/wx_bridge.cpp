@@ -333,6 +333,7 @@ static jint InitFramework(JNIEnv* env, jobject object, jstring script,
   if (!WXBridge::Instance()->jni_object()) {
     WXBridge::Instance()->Reset(env, object);
   }
+  LOGE("preInstall InitFramework in jni");
   // Init platform thread --- ScriptThread
   WeexCoreManager::Instance()->InitScriptThread();
   // Exception handler for so

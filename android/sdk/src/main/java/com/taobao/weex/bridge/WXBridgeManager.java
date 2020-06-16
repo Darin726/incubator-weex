@@ -341,7 +341,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
   }
 
   private void setJSFrameworkInit(boolean init) {
-    WXLogUtils.d("preInstall","setJSFrameworkInit as : " + init);
+    Log.e("preInstall","setJSFrameworkInit as : " + init);
     mInit = init;
     WXSDKEngine.setInit(init);
     WXStateRecord.getInstance().recoreJsfmInitHistory("setJsfmInitFlag:"+init);
@@ -2195,9 +2195,9 @@ public class WXBridgeManager implements Callback, BactchExecutor {
         LogDetail logDetail3 = new LogDetail();
         logDetail3.name("native initFrameworkEnv");
         logDetail3.taskStart();
-        WXLogUtils.d("preInstall","weex_jsframework init start");
+        Log.e("preInstall","weex_jsframework init start");
         if (mWXBridge.initFrameworkEnv(framework, assembleDefaultOptions(), crashFile, pieSupport) == INIT_FRAMEWORK_OK) {
-          WXLogUtils.d("preInstall","weex_jsframework init end");
+          Log.e("preInstall","weex_jsframework init end");
           logDetail3.taskEnd();
           WXEnvironment.sJSLibInitTime = System.currentTimeMillis() - start;
           WXEnvironment.sSDKInitTime = System.currentTimeMillis() - WXEnvironment.sSDKInitStart;

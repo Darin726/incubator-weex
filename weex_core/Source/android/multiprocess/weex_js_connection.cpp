@@ -196,6 +196,7 @@ static void *newIPCServer(void *_td) {
 }
 
 IPCSender *WeexJSConnection::start(bool reinit) {
+  LOGE("preInstall start create IPC");
   if(client_== nullptr || client_.get() == nullptr) {
     return nullptr;
   }

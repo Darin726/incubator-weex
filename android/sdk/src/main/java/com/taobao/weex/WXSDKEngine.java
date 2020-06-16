@@ -26,6 +26,8 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
+import android.util.Log;
+
 import com.taobao.weex.adapter.IDrawableLoader;
 import com.taobao.weex.adapter.IWXHttpAdapter;
 import com.taobao.weex.adapter.IWXImgLoaderAdapter;
@@ -160,7 +162,7 @@ public class WXSDKEngine implements Serializable {
    * @param config initial configurations or null
    */
   public static void initialize(Application application,InitConfig config){
-    WXLogUtils.d("preInstall","weex_sdk init start");
+    Log.e("preInstall","weex_sdk init start");
     synchronized (mLock) {
       long start = System.currentTimeMillis();
       WXEnvironment.sSDKInitStart = start;
@@ -174,7 +176,7 @@ public class WXSDKEngine implements Serializable {
       WXEnvironment.sSDKInitInvokeTime = System.currentTimeMillis()-start;
       WXLogUtils.renderPerformanceLog("SDKInitInvokeTime", WXEnvironment.sSDKInitInvokeTime);
     }
-    WXLogUtils.d("preInstall","weex_sdk init end");
+    Log.e("preInstall","weex_sdk init end");
   }
 
   public static void setInit(boolean flag) {
