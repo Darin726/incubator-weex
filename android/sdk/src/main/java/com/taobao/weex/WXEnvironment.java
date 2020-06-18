@@ -19,6 +19,9 @@
 package com.taobao.weex;
 
 import static android.content.Context.MODE_PRIVATE;
+import static android.system.OsConstants.PROT_EXEC;
+import static android.system.OsConstants.PROT_READ;
+import static android.system.OsConstants.PROT_WRITE;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
@@ -29,8 +32,12 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.os.Environment;
+import android.os.Parcelable;
+import android.os.SharedMemory;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.Log;
+
 import com.taobao.weex.common.WXConfig;
 import com.taobao.weex.utils.FontDO;
 import com.taobao.weex.utils.LogLevel;
@@ -43,6 +50,7 @@ import com.taobao.weex.utils.WXViewUtils;
 import dalvik.system.PathClassLoader;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -557,8 +565,22 @@ public class WXEnvironment {
     return null;
   }
 
+  private static void CreateMEM() {
+    try {
+      SharedMemory a = SharedMemory.create("WEEX_IPC_CLIENT", 2 * 1024 * 1024);
+      Method b = SharedMemory.class.getDeclaredMethod("getFd");
+      Object invoke = b.invoke(a);
+
+      Log.e("dyy", "getFileDescriptor : " + String.valueOf(invoke));
+
+    } catch (Throwable e) {
+
+    }
+  }
+
 
   public static String findSoPath(String libName) {
+    CreateMEM();
     String soPath = ((PathClassLoader) (WXEnvironment.class.getClassLoader())).findLibrary(libName);
     if (!TextUtils.isEmpty(soPath)) {
       File soFile = new File(soPath);

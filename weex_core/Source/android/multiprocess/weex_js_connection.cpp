@@ -265,9 +265,6 @@ IPCSender *WeexJSConnection::start(bool reinit) {
   LOGE("startupPie :%d", startupPie);
 
   pid_t child;
-  int pifiledescritor[2] = {client_->ipcFd, server_->ipcFd};
-  pipe(pifiledescritor);
-  __android_log_print(ANDROID_LOG_ERROR,"dyy","pip pip pip pip pip %d %d",pifiledescritor[0],pifiledescritor[1]);
   if (reinit) {
 #if PRINT_LOG_CACHEFILE
     mcfile << "reinit is ture use vfork" << std::endl;
