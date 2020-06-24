@@ -23,6 +23,7 @@
 #include <jni.h>
 #include <functional>
 #include <string>
+#include <android/log.h>
 
 namespace WeexCore {
 class SoUtils {
@@ -88,6 +89,20 @@ class SoUtils {
     g_android_api = android_api;
   }
 
+    inline static const int client_fd() {return client_fd_;}
+    inline static void set_client_fd(int fd) {
+      __android_log_print(ANDROID_LOG_ERROR,"dyy","set_client_fd %d", fd);
+      client_fd_ = fd;
+    }
+
+    inline static const int server_fd() {return server_fd_;}
+    inline static void set_server_fd(int fd) {
+      __android_log_print(ANDROID_LOG_ERROR,"dyy","set_server_fd %d", fd);
+      server_fd_ = fd;
+    }
+
+
+
  private:
   static const char* GetDefaultCacheDir(JNIEnv* env);
   static char* g_cache_dir;
@@ -100,6 +115,8 @@ class SoUtils {
   static char* g_lib_ld_path;
   static bool g_pie_support;
   static int g_android_api;
+  static int client_fd_;
+  static int server_fd_;
   static std::function<void(const char*, const char*)> g_exception_handler;
 };
 }  // namespace WeexCore

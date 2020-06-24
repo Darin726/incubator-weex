@@ -619,7 +619,12 @@ void *WeexConnInfo::mmap_for_ipc() {
   int initTimes = 1;
   void *base = MAP_FAILED;
   do {
-    fd = ashmem_create_region_inner(fileName.c_str(), IPCFutexPageQueue::ipc_size);
+//    fd = ashmem_create_region_inner(fileName.c_str(), IPCFutexPageQueue::ipc_size);
+    if (is_client) {
+        fd = SoUtils::client_fd();
+    } else {
+        fd = SoUtils::server_fd();
+    }
     if (-1 == fd) {
       if (this->is_client) {
         throw IPCException("failed to create ashmem region: %s", strerror(errno));
@@ -657,6 +662,12 @@ typedef int (*ASharedMemory_setProt_o)(int fd, int prot);
 
 
 int WeexConnInfo::ashmem_create_region_inner(const char *name, size_t size) {
+
+    /**
+     * for test
+     */
+
+
   if(SoUtils::android_api() < __ANDROID_API_O__) {
     return ashmem_create_region(name,size);
   }
@@ -670,6 +681,7 @@ int WeexConnInfo::ashmem_create_region_inner(const char *name, size_t size) {
       (handle != nullptr) ? reinterpret_cast<AShmem_create_t_o>(dlsym(handle, "ASharedMemory_create"))
                           : nullptr;
   if (funcPtr) {
+    __android_log_print(ANDROID_LOG_ERROR,"dyy","create SharedMemory %s",name);
     fd = funcPtr(name, size);
 
     if (fd < 0)

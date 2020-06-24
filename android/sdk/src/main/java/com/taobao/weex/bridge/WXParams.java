@@ -18,6 +18,8 @@
  */
 package com.taobao.weex.bridge;
 
+import android.util.Log;
+
 import com.taobao.weex.WXEnvironment;
 import com.taobao.weex.WXSDKManager;
 import com.taobao.weex.adapter.IWXConfigAdapter;
@@ -51,6 +53,20 @@ public class WXParams implements Serializable {
   private String libIcuPath;
   private String libLdPath;
   private String libJsbPath;
+
+  public int getClientFd() {
+    Log.e("dyy","getClientFd called");
+    return clientFd;
+  }
+
+  public int clientFd;
+
+  public int getServerFd() {
+    Log.e("dyy","getServerFd called");
+    return serverFd;
+  }
+
+  public int serverFd;
 
   private Map<String, String> options;
 

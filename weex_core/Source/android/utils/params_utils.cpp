@@ -168,12 +168,27 @@ std::vector<INIT_FRAMEWORK_PARAMS*> initFromParam(
     ReportNativeInitStatus("-1012", "get m_platform failed");
     return initFrameworkParams;
   }
+
   jobject platform = env->CallObjectMethod(params, m_platform);
   if (platform == nullptr) {
     ADDSTRING(nullptr);
     ReportNativeInitStatus("-1012", "get platform failed");
     return initFrameworkParams;
   }
+
+  jmethodID server_md =
+          env->GetMethodID(c_params, "getServerFd", "()I");
+  jint server_obj = env->CallIntMethod(params, server_md);
+  SoUtils::set_server_fd(server_obj);
+
+  jmethodID client_md =
+          env->GetMethodID(c_params, "getClientFd", "()I");
+  jint client_obj = env->CallIntMethod(params, client_md);
+
+  SoUtils::set_client_fd(client_obj);
+
+
+
   if (!WXCoreEnvironment::getInstance()->SetPlatform(
           jString2StrFast(env, reinterpret_cast<jstring&>(platform)))) {
     LOGD("setPlatform");

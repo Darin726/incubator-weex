@@ -34,6 +34,7 @@ import android.graphics.Typeface;
 import android.os.Environment;
 import android.os.Parcelable;
 import android.os.SharedMemory;
+import android.system.Os;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -53,6 +54,7 @@ import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -565,6 +567,22 @@ public class WXEnvironment {
     return null;
   }
 
+  public static int createASHMEM() {
+    int fd = 0;
+    try {
+      Class<?> aClass = Class.forName("android.system.Os");
+      FileDescriptor aa = Os.memfd_create("aa", 0);
+      Field bbbb = aa.getClass().getDeclaredField("descriptor");
+      bbbb.setAccessible(true);
+      fd = Integer.parseInt(String.valueOf(bbbb.get(aa)));
+      Log.e("dyy", "memfd_create : " + bbbb.get(aa));
+      Os.ftruncate(aa, 2 * 1024 * 1024);
+    } catch (Throwable e) {
+
+    }
+    return fd;
+  }
+
   private static void CreateMEM() {
     try {
       SharedMemory a = SharedMemory.create("WEEX_IPC_CLIENT", 2 * 1024 * 1024);
@@ -572,7 +590,6 @@ public class WXEnvironment {
       Object invoke = b.invoke(a);
 
       Log.e("dyy", "getFileDescriptor : " + String.valueOf(invoke));
-
     } catch (Throwable e) {
 
     }
@@ -580,7 +597,6 @@ public class WXEnvironment {
 
 
   public static String findSoPath(String libName) {
-    CreateMEM();
     String soPath = ((PathClassLoader) (WXEnvironment.class.getClassLoader())).findLibrary(libName);
     if (!TextUtils.isEmpty(soPath)) {
       File soFile = new File(soPath);

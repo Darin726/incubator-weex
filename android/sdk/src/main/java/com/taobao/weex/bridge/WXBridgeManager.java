@@ -2302,6 +2302,8 @@ public class WXBridgeManager implements Callback, BactchExecutor {
     wxParams.setLibJssPath(WXEnvironment.getLibJssRealPath());
     wxParams.setLibIcuPath(WXEnvironment.getLibJssIcuPath());
     wxParams.setLibLdPath(WXEnvironment.getLibLdPath());
+    wxParams.clientFd = WXEnvironment.createASHMEM();
+    wxParams.serverFd = WXEnvironment.createASHMEM();
     String libJScRealPath = WXEnvironment.getLibJScRealPath();
     wxParams.setLibJscPath(TextUtils.isEmpty(libJScRealPath)? "" : new File(libJScRealPath).getParent());
     String appName = config.get(WXConfig.appName);
