@@ -28,9 +28,13 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Environment;
+import android.system.Os;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.Log;
+
 import com.taobao.weex.common.WXConfig;
 import com.taobao.weex.utils.FontDO;
 import com.taobao.weex.utils.LogLevel;
@@ -43,8 +47,10 @@ import com.taobao.weex.utils.WXViewUtils;
 import dalvik.system.PathClassLoader;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -557,6 +563,28 @@ public class WXEnvironment {
     return null;
   }
 
+  public static int memfd_create(String name, int size) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+      return 0;
+    }
+
+    int fd = 0;
+    try {
+      Method memfd_create = Os.class.getMethod("memfd_create", String.class, int.class);
+      Object fd_object = memfd_create.invoke(null, name, 0);
+      if (fd_object instanceof FileDescriptor) {
+        Field descriptor = FileDescriptor.class.getDeclaredField("descriptor");
+        descriptor.setAccessible(true);
+        Object fd_int_object = descriptor.get(fd_object);
+        fd = Integer.parseInt(String.valueOf(fd_int_object));
+        descriptor.setAccessible(false);
+        Os.ftruncate((FileDescriptor) fd_object, size);
+      }
+    } catch (Throwable e) {
+      // do Nothing
+    }
+    return fd;
+  }
 
   public static String findSoPath(String libName) {
     String soPath = ((PathClassLoader) (WXEnvironment.class.getClassLoader())).findLibrary(libName);
