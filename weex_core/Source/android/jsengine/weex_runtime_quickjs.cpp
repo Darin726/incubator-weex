@@ -29,6 +29,13 @@
 
 #define countof(x) (sizeof(x) / sizeof((x)[0]))
 static std::string toJSON(JSContext *ctx, JSValue value);
+
+static void printWson(std::string msg, wson_buffer *buffer) {
+  wson_parser parser((char *) buffer->data);
+  const std::string &string = parser.toStringUTF8();
+  LOGE("dyyLog printWson %s %s", msg.c_str(), string.c_str());
+}
+
 static uint64_t microTime_new() {
   struct timeval tv;
 
@@ -386,8 +393,8 @@ int WeexRuntimeQuickJS::createInstance(
                        JS_NewAtom(globalContext, "createInstanceContext"));
     JSValue args[3];
     args[0] = JS_NewString(globalContext, instanceId.c_str());
-    args[1] = JS_NewString(globalContext, opts.c_str());
-    args[2] = JS_NewString(globalContext, initData.c_str());
+    args[1] = JS_ParseJSON(globalContext, opts.c_str(), opts.length(),"");
+    args[2] = JS_ParseJSON(globalContext, initData.c_str(), initData.length(),"");
 
     JSValue ret = JS_Call(globalContext, createInstanceContextFunc,
                           JS_GetGlobalObject(globalContext), 3, args);
@@ -395,7 +402,7 @@ int WeexRuntimeQuickJS::createInstance(
     if (JS_IsException(ret)) {
       const JSValue &exception = JS_GetException(globalContext);
       const char *string = JS_ToCString(globalContext, exception);
-      LOGE("dyyLog Create Instance JS_IsException %s", string);
+      LOGE("dyyLog createInstance Create Instance JS_IsException %s", string);
       return 0;
     }
 
@@ -409,20 +416,16 @@ int WeexRuntimeQuickJS::createInstance(
 
     for (size_t i = 0; i < tab_atom_count; i++) {
       auto atom = tab_atom[i].atom;
-
       auto propertyValue = JS_GetProperty(globalContext, ret, atom);
-
       const char *name = JS_AtomToCString(thisContext, atom);
-
       auto newAtom = JS_NewAtom(thisContext, name);
-
       auto thisObject = JS_GetGlobalObject(thisContext);
       int aProperty = JS_SetProperty(thisContext, thisObject, newAtom, propertyValue);
 
-
-      LOGE("dyyLog propertyValue %s %d result is %d", name, JS_IsFunction(globalContext, propertyValue), aProperty);
+      LOGE("dyyLog  createInstance  propertyValue %s is Func %d is Object %d result is %d",
+          name, JS_IsFunction(globalContext, propertyValue), JS_IsObject(propertyValue), aProperty);
       if (strcmp(name, "Vue") == 0) {
-        LOGE("dyyLog set propertyValue Vue");
+        LOGE("dyyLog  createInstance  set propertyValue Vue");
         JS_SetPrototype(thisContext, propertyValue,
                         JS_GetPrototype(thisContext, thisObject));
       }
@@ -437,21 +440,21 @@ int WeexRuntimeQuickJS::createInstance(
     if (JS_IsException(ret)) {
       const JSValue &exception = JS_GetException(thisContext);
       const char *string = JS_ToCString(thisContext, exception);
-      LOGE("dyyLog Create Instance extendsApi JS_IsException %s", string);
+      LOGE("dyyLog  createInstance  Create Instance extendsApi JS_IsException %s", string);
       return 0;
     }
   }
-  LOGE("dyyLog create Instance start");
+  LOGE("dyyLog  createInstance  create Instance start %d ", script.length());
   auto createInstanceRet = JS_Eval(thisContext, script.c_str(), script.length(),
                                    "createInstance", JS_EVAL_TYPE_GLOBAL);
 
   if (JS_IsException(createInstanceRet)) {
     const JSValue &exception = JS_GetException(thisContext);
     const char *string = JS_ToCString(thisContext, exception);
-    LOGE("dyyLog Create Instance createInstanceRet JS_IsException %s", string);
+    LOGE("dyyLog  createInstance Create Instance createInstanceRet JS_IsException %s", string);
     return 0;
   }
-  LOGE("dyyLog create Instance Finish");
+  LOGE("dyyLog  createInstance create Instance Finish");
   return 1;
 }
 
@@ -630,7 +633,7 @@ static void putValuesToWson(JSContext *ctx, JSValue value,
           JSAtom atom = tab_atom[i].atom;
           JSValue item = JS_GetProperty(ctx, value, atom);
           JSValue key = JS_AtomToValue(ctx, atom);
-
+ 
           const char *str = JS_ToCString(ctx, key);
           pushMapKeyToBuffer(buffer, str);
           putValuesToWson(ctx, item, buffer);
@@ -651,7 +654,8 @@ static wson_buffer *toWsonBuffer(JSContext *ctx, JSValue value) {
   wson_buffer *buffer = wson_buffer_new();
   putValuesToWson(ctx, value, buffer);
   wson_parser parser((char *) buffer->data);
-  LOGE("dyyLog toWsonBuffer %s", parser.toStringUTF8().c_str());
+  const std::string &string = parser.toStringUTF8();
+  LOGE("dyyLog toWsonBuffer %s", string.empty() ? "put empty" : string.c_str());
   return buffer;
 }
 
@@ -681,8 +685,9 @@ static JSValue js_CallNativeModule(JSContext *ctx, JSValueConst this_val,
   const char *method = JS_ToCString(ctx, argv[2]);
 
   wson_buffer *arguments = toWsonBuffer(ctx, argv[3]);
-
   wson_buffer *options = toWsonBuffer(ctx, argv[4]);
+
+  printWson("callNativeModule arguments", arguments);
 
   auto result =
       WeexEnv::getEnv()->scriptBridge()->core_side()->CallNativeModule(
@@ -742,11 +747,13 @@ static JSValue js_CallNativeComponent(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_CallAddElement(JSContext *ctx, JSValueConst this_val,
                                  int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_CallAddElement");
 
   wson_buffer *pBuffer = toWsonBuffer(ctx, argv[2]);
+  const char *id = JS_ToCString(ctx, argv[0]);
+  const char *ref = JS_ToCString(ctx, argv[1]);
+  LOGE("dyyLog js_CallAddElement %s %s", id, ref);
   WeexEnv::getEnv()->scriptBridge()->core_side()->AddElement(
-      JS_ToCString(ctx, argv[0]), JS_ToCString(ctx, argv[1]),
+      id, ref,
       (char *) pBuffer->data, pBuffer->length, JS_ToCString(ctx, argv[3]));
 
   return JS_NewInt32(ctx, 0);
@@ -760,7 +767,7 @@ static JSValue js_SetTimeoutNative(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_NativeLog(JSContext *ctx, JSValueConst this_val, int argc,
                             JSValueConst *argv) {
-  LOGE("dyyLog js_NativeLog");
+  LOGE("dyyLog jsBindingMethod js_NativeLog");
 
   std::string result = "dyyLog";
 
