@@ -296,7 +296,7 @@ int WeexRuntimeQuickJS::exeJS(const std::string &instanceId,
                               std::vector<VALUE_WITH_TYPE *> &params) {
   std::string newFunc = func;
   JSContext *thisContext = nullptr;
-
+  LOGE("dyyLog  js_exeJS  is running");
   if (instanceId.empty() || std::strcmp("callJS", func.c_str()) == 0) {
     thisContext = m_jsContextFramework;
   } else {
@@ -402,7 +402,7 @@ int WeexRuntimeQuickJS::createInstance(
     if (JS_IsException(ret)) {
       const JSValue &exception = JS_GetException(globalContext);
       const char *string = JS_ToCString(globalContext, exception);
-      LOGE("dyyLog createInstance Create Instance JS_IsException %s", string);
+      LOGE("dyyLog js_createInstance Create Instance JS_IsException %s", string);
       return 0;
     }
 
@@ -422,12 +422,19 @@ int WeexRuntimeQuickJS::createInstance(
       auto thisObject = JS_GetGlobalObject(thisContext);
       int aProperty = JS_SetProperty(thisContext, thisObject, newAtom, propertyValue);
 
-      LOGE("dyyLog  createInstance  propertyValue %s is Func %d is Object %d result is %d",
+      LOGE("dyyLog  js_createInstance  propertyValue %s is Func %d is Object %d result is %d",
           name, JS_IsFunction(globalContext, propertyValue), JS_IsObject(propertyValue), aProperty);
       if (strcmp(name, "Vue") == 0) {
-        LOGE("dyyLog  createInstance  set propertyValue Vue");
+        LOGE("dyyLog  js_createInstance  set propertyValue Vue");
+        JSValue val = JS_GetPrototype(thisContext, thisObject);
+        if(val == JS_NULL || val == JS_UNDEFINED) {
+          LOGE("dyyLog  js_createInstance  set propertyValue Vue undefined before");
+        }
         JS_SetPrototype(thisContext, propertyValue,
-                        JS_GetPrototype(thisContext, thisObject));
+                        val);
+        if(val == JS_NULL || val == JS_UNDEFINED) {
+          LOGE("dyyLog  js_createInstance  set propertyValue Vue undefined after");
+        }
       }
     }
 
@@ -440,21 +447,26 @@ int WeexRuntimeQuickJS::createInstance(
     if (JS_IsException(ret)) {
       const JSValue &exception = JS_GetException(thisContext);
       const char *string = JS_ToCString(thisContext, exception);
-      LOGE("dyyLog  createInstance  Create Instance extendsApi JS_IsException %s", string);
+      LOGE("dyyLog  js_createInstance  Create Instance extendsApi JS_IsException %s", string);
       return 0;
     }
   }
-  LOGE("dyyLog  createInstance  create Instance start %d ", script.length());
+  LOGE("dyyLog  js_createInstance  create Instance start %d ", script.length());
   auto createInstanceRet = JS_Eval(thisContext, script.c_str(), script.length(),
                                    "createInstance", JS_EVAL_TYPE_GLOBAL);
 
   if (JS_IsException(createInstanceRet)) {
+    JSValue name, stack;
     const JSValue &exception = JS_GetException(thisContext);
     const char *string = JS_ToCString(thisContext, exception);
-    LOGE("dyyLog  createInstance Create Instance createInstanceRet JS_IsException %s", string);
+    name = JS_GetPropertyStr(thisContext, exception, "name");
+    const char *error_name = JS_ToCString(thisContext, name);
+    stack = JS_GetPropertyStr(thisContext, exception, "stack");
+    const char *stack_str = JS_ToCString(thisContext, stack);
+    LOGE("dyyLog  js_createInstance Create Instance createInstanceRet JS_IsException %s %s %s",error_name, string, stack_str);
     return 0;
   }
-  LOGE("dyyLog  createInstance create Instance Finish");
+  LOGE("dyyLog  js_createInstance create Instance Finish");
   return 1;
 }
 

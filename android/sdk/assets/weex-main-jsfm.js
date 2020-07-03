@@ -2921,7 +2921,7 @@ var setTimeout = global.setTimeout;
                 if (this.docId) {
                     registerNode(this.docId, node);
                 }
-                if (true) {
+                if (node.nodeType === 1) {
                     insertIndex(node, this.pureChildren, this.pureChildren.length);
                     var taskCenter = getTaskCenter(this.docId);
                     if (taskCenter) {
