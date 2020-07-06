@@ -5,6 +5,11 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
+#add_compile_options(-fno-exceptions)
+add_compile_options(-fstack-protector)
+add_compile_options(-fno-unwind-tables)
+add_compile_options(-fno-omit-frame-pointer)
+
 if (DEFINED ENV{WEEX_CORE_SOURCE_DIR})
     message('WEEX_CORE_SOURCE_DIR has set')
 else ()
@@ -200,11 +205,11 @@ set(${WEEXJSSERVER_NAME}_SOURCES
         task/back_to_weex_core_queue.cpp
 
         #  ${JS_RUNTIME_API_SRCS}
-        ${JS_RUNTIME_API_SRCS}
-        ${DOM_API_SRCS}
-        ${WEEX_BINDING}
-        ${JSON_SRC}
-        ${WEEX_RUNTIME_V2}
+#        ${JS_RUNTIME_API_SRCS}
+#        ${DOM_API_SRCS}
+#        ${WEEX_BINDING}
+#        ${JSON_SRC}
+#        ${WEEX_RUNTIME_V2}
         )
 link_directories(${LOCAL_LIBRARIES_DIR})
 SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}" CACHE STRING "toolchain_exelinkflags" FORCE)
@@ -241,8 +246,9 @@ set(${WEEXJSSERVER_NAME}_LIBRARIES
         weexipc
         wson
         c++_shared
-        jsc
+#        jsc
         log
+        stdc++
         z
         -lc
         -ldl

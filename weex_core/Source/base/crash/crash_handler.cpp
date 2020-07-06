@@ -35,7 +35,6 @@
 #if defined(__arm__)
 #include "base/crash/backtrace.h"
 #else
-#include <unwind.h>
 #endif
 #include "base/android/weex_log.h"
 
@@ -80,22 +79,12 @@ static void crashSigAction(int num, siginfo_t* info, void* ucontext)
     _exit(0);
 }
 
-#if defined(__arm__)
 static int traceFunction(uintptr_t ip, void* arg)
 {
     if (g_crashHandler->printIP(reinterpret_cast<void*>(ip)))
-        return BACKTRACE_CONTINUE;
-    return BACKTRACE_ABORT;
+        return 1;
+    return 1;
 }
-#else
-static _Unwind_Reason_Code traceFunction(_Unwind_Context* context, void* arg)
-{
-    void* ip = (void*)_Unwind_GetIP(context);
-    if (g_crashHandler->printIP(ip))
-        return _URC_NO_REASON;
-    return _URC_NORMAL_STOP;
-}
-#endif
 
 /* Class CrashHandlerInfo */
 CrashHandlerInfo::CrashHandlerInfo(std::string fileName)
