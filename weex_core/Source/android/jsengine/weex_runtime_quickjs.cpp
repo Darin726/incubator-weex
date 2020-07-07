@@ -26,6 +26,7 @@
 #include <base/string_util.h>
 #include "log_defines.h"
 #include "weex_jsc_utils.h"
+#include <fstream>
 
 #define countof(x) (sizeof(x) / sizeof((x)[0]))
 static std::string toJSON(JSContext *ctx, JSValue value);
@@ -296,16 +297,19 @@ int WeexRuntimeQuickJS::exeJS(const std::string &instanceId,
                               std::vector<VALUE_WITH_TYPE *> &params) {
   std::string newFunc = func;
   JSContext *thisContext = nullptr;
-  LOGE("dyyLog  js_exeJS  is running");
-  if (instanceId.empty() || std::strcmp("callJS", func.c_str()) == 0) {
-    thisContext = m_jsContextFramework;
-  } else {
+
+  if (std::strcmp("callJS", func.c_str()) == 0) {
     thisContext = m_contextMap[instanceId.c_str()];
     if (thisContext == nullptr) {
+      LOGE("dyyLog  js_exeJS is running use global ctx1 %s",instanceId.c_str());
       thisContext = m_jsContextFramework;
     } else {
+      LOGE("dyyLog  js_exeJS is running use sandbox ctx2 %s",instanceId.c_str());
       newFunc = "__WEEX_CALL_JAVASCRIPT__";
     }
+  } else {
+    LOGE("dyyLog  js_exeJS is running use global ctx %s",instanceId.c_str());
+    thisContext = m_jsContextFramework;
   }
 
   auto thisObject = JS_GetGlobalObject(thisContext);
@@ -348,9 +352,11 @@ int WeexRuntimeQuickJS::exeJS(const std::string &instanceId,
         //                msg.append(":");
         //                msg.append(JSONStringify(state, o, 0).utf8().data());
       }
-        break;
-      default:a[i] = JS_UNDEFINED;
-        break;
+        break; {
+            LOGE("dyyLog sss undefined");
+            default:a[i] = JS_UNDEFINED;
+            break;
+        }
     }
   }
 
@@ -379,6 +385,13 @@ int WeexRuntimeQuickJS::createInstance(
     const std::string &initData, const std::string &extendsApi,
     std::vector<INIT_FRAMEWORK_PARAMS *> &params) {
   JSContext *thisContext;
+
+
+  std::ofstream outfile;
+  outfile.open("/data/local/tmp/weex/index_read_exec.js");
+  outfile << script.c_str() << std::endl;
+  outfile.close();
+
   if (instanceId.empty()) {
     thisContext = m_jsContextFramework;
   } else {
@@ -437,11 +450,12 @@ int WeexRuntimeQuickJS::createInstance(
         }
       }
     }
-
+    LOGE("dyyLog  js_createInstance  pub str %s", instanceId.c_str());
     this->m_contextMap[instanceId.c_str()] = thisContext;
   }
 
   if (!extendsApi.empty()) {
+    LOGE("dyyLog  js_createInstance  Create Instance extendsApi extendsApi");
     auto ret = JS_Eval(thisContext, extendsApi.c_str(), extendsApi.length(),
                        "extendsApi", JS_EVAL_TYPE_GLOBAL);
     if (JS_IsException(ret)) {
@@ -451,7 +465,7 @@ int WeexRuntimeQuickJS::createInstance(
       return 0;
     }
   }
-  LOGE("dyyLog  js_createInstance  create Instance start %d ", script.length());
+  LOGE("dyyLog  js_createInstance  create Instance start %d %d", script.length(), script.size());
   auto createInstanceRet = JS_Eval(thisContext, script.c_str(), script.length(),
                                    "createInstance", JS_EVAL_TYPE_GLOBAL);
 
@@ -489,7 +503,7 @@ JSContext *WeexRuntimeQuickJS::createContext() {
   bindConsoleLog(ctx);
   JSValue i = JS_GetGlobalObject(ctx);
   JS_SetProperty(ctx, i, JS_NewAtom(ctx, "global"), i);
-  JS_SetMaxStackSize(ctx, 1024 * 1024 * 1024);
+  JS_SetMaxStackSize(ctx, 1024*10000);
   return ctx;
 }
 
@@ -701,7 +715,7 @@ static JSValue js_CallNativeModule(JSContext *ctx, JSValueConst this_val,
   wson_buffer *options = toWsonBuffer(ctx, argv[4]);
 
   printWson("callNativeModule arguments", arguments);
-
+  LOGE("dyyLog js_CallNativeModule %s %s", module, method);
   auto result =
       WeexEnv::getEnv()->scriptBridge()->core_side()->CallNativeModule(
           id, module, method, (char *) (arguments->data), arguments->length,

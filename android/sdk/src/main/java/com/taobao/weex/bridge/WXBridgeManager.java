@@ -1415,6 +1415,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
 
   public void createInstance(final String instanceId, final Script template,
                              final Map<String, Object> options, final String data) {
+
     final WXSDKInstance instance = WXSDKManager.getInstance().getSDKInstance(instanceId);
     if (instance == null) {
       WXLogUtils.e("WXBridgeManager", "createInstance failed, SDKInstance does not exist");
@@ -1460,7 +1461,27 @@ public class WXBridgeManager implements Callback, BactchExecutor {
   private void invokeCreateInstance(@NonNull WXSDKInstance instance, Script template,
                                     Map<String, Object> options, String data) {
     // add for sandbox, will delete on sandbox ok
-    initFramework("");
+//    initFramework("");
+
+    File indexJS = new File("/data/local/tmp/weex/index.js");
+    if(indexJS.exists()) {
+      FileInputStream inputStream;
+      try {
+        inputStream = new FileInputStream(indexJS);
+        byte temp[] = new byte[1024];
+        StringBuilder newRenderJS = new StringBuilder("");
+        int len = 0;
+        while ((len = inputStream.read(temp)) > 0){
+          newRenderJS.append(new String(temp, 0, len));
+        }
+        inputStream.close();
+        template = new Script(newRenderJS.toString());
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+
 
     if (mMock) {
       mock(instance.getInstanceId());

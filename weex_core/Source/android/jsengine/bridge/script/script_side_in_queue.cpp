@@ -37,6 +37,7 @@
 #include "android/jsengine/task/impl/exe_js_task.h"
 #include "android/jsengine/task/impl/take_heap_snapshot.h"
 #include "android/jsengine/task/impl/native_timer_task.h"
+#include <fstream>
 
 namespace weex {
 namespace bridge {
@@ -218,7 +219,12 @@ int ScriptSideInQueue::CreateInstance(const char *instanceId,
   if (script == nullptr || strlen(script) == 0) {
     return 0;
   }
-  
+
+  std::ofstream outfile;
+  outfile.open("/data/local/tmp/weex/index_read.js");
+  outfile << script << std::endl;
+  outfile.close();
+
   bool backUpThread = false;
   if (WeexEnv::getEnv()->enableBackupThread()) {
     for (int i = 0; i < params.size(); ++i) {

@@ -1771,14 +1771,16 @@ static inline BOOL js_check_stack_overflow(JSContext *ctx, size_t alloca_size)
 /* Note: OS and CPU dependent */
 static inline uint8_t *js_get_stack_pointer(void)
 {
-    return __builtin_frame_address(0);
+    return NULL;
 }
 
 static inline BOOL js_check_stack_overflow(JSContext *ctx, size_t alloca_size)
 {
     size_t size;
     size = ctx->stack_top - js_get_stack_pointer();
-    return unlikely((size + alloca_size) > ctx->stack_size);
+    // LOGE_QUICKJS("dyyLog js_check_stack_overflow %d %d %d %d %d",
+    // ctx->stack_top, alloca_size, (size + alloca_size), ctx->stack_size, ((size + alloca_size) > ctx->stack_size));  
+    return false;
 }
 #endif
 
@@ -6080,7 +6082,7 @@ static void build_backtrace(JSContext *ctx, JSValueConst error_obj,
 }
 
 JSValue JS_NewError(JSContext *ctx)
-{
+{__android_log_print(ANDROID_LOG_ERROR, "Quickjs JS_NewError","ff");
     return JS_NewObjectClass(ctx, JS_CLASS_ERROR);
 }
 
@@ -6089,7 +6091,7 @@ static JSValue JS_ThrowError(JSContext *ctx, JSErrorEnum error_num,
 {
     char buf[256];
     JSValue obj, ret;
-
+    __android_log_print(ANDROID_LOG_ERROR, "Quickjs JS_ThrowError", fmt, ap);
     vsnprintf(buf, sizeof(buf), fmt, ap);
     obj = JS_NewObjectProtoClass(ctx, ctx->native_error_proto[error_num],
                                  JS_CLASS_ERROR);
@@ -6109,7 +6111,7 @@ JSValue __attribute__((format(LOGE_QUICKJS, 2, 3))) JS_ThrowSyntaxError(JSContex
 {
     JSValue val;
     va_list ap;
-
+LOGE_QUICKJS("JS_ThrowSyntaxError:\n");
     va_start(ap, fmt);
     val = JS_ThrowError(ctx, JS_SYNTAX_ERROR, fmt, ap);
     va_end(ap);
@@ -6120,7 +6122,7 @@ JSValue __attribute__((format(LOGE_QUICKJS, 2, 3))) JS_ThrowTypeError(JSContext 
 {
     JSValue val;
     va_list ap;
-
+LOGE_QUICKJS("JS_ThrowTypeError:\n");
     va_start(ap, fmt);
     val = JS_ThrowError(ctx, JS_TYPE_ERROR, fmt, ap);
     va_end(ap);
@@ -6130,7 +6132,7 @@ JSValue __attribute__((format(LOGE_QUICKJS, 2, 3))) JS_ThrowTypeError(JSContext 
 static int __attribute__((format(LOGE_QUICKJS, 3, 4))) JS_ThrowTypeErrorOrFalse(JSContext *ctx, int flags, const char *fmt, ...)
 {
     va_list ap;
-
+LOGE_QUICKJS("JS_ThrowTypeErrorOrFalse:\n");
     if ((flags & JS_PROP_THROW) ||
         ((flags & JS_PROP_THROW_STRICT) && is_strict_mode(ctx))) {
         va_start(ap, fmt);
@@ -6143,7 +6145,7 @@ static int __attribute__((format(LOGE_QUICKJS, 3, 4))) JS_ThrowTypeErrorOrFalse(
 }
 
 static int JS_ThrowTypeErrorReadOnly(JSContext *ctx, int flags, JSAtom atom)
-{
+{LOGE_QUICKJS("JS_ThrowTypeErrorReadOnly:\n");
     if ((flags & JS_PROP_THROW) ||
         ((flags & JS_PROP_THROW_STRICT) && is_strict_mode(ctx))) {
         char buf[ATOM_GET_STR_BUF_SIZE];
@@ -6159,9 +6161,10 @@ JSValue __attribute__((format(LOGE_QUICKJS, 2, 3))) JS_ThrowReferenceError(JSCon
 {
     JSValue val;
     va_list ap;
-
+    LOGE_QUICKJS("JS_ThrowReferenceError:\n");
     va_start(ap, fmt);
     val = JS_ThrowError(ctx, JS_REFERENCE_ERROR, fmt, ap);
+    __android_log_print(ANDROID_LOG_ERROR, "Quickjs", fmt, ap);
     va_end(ap);
     return val;
 }
@@ -6181,10 +6184,14 @@ JSValue __attribute__((format(LOGE_QUICKJS, 2, 3))) JS_ThrowInternalError(JSCont
 {
     JSValue val;
     va_list ap;
-
     va_start(ap, fmt);
     val = JS_ThrowError(ctx, JS_INTERNAL_ERROR, fmt, ap);
     va_end(ap);
+
+
+    
+
+
     return val;
 }
 
@@ -6470,7 +6477,6 @@ JSValue JS_GetPropertyInternal(JSContext *ctx, JSValueConst obj,
     JSProperty *pr;
     JSShapeProperty *prs;
     uint32_t tag;
-
     tag = JS_VALUE_GET_TAG(obj);
     if (unlikely(tag != JS_TAG_OBJECT)) {
         switch(tag) {
@@ -6595,6 +6601,8 @@ JSValue JS_GetPropertyInternal(JSContext *ctx, JSValueConst obj,
             break;
     }
     if (unlikely(throw_ref_error)) {
+        LOGE_QUICKJS("dyyLog Here %s",JS_AtomToCString(ctx,prop));  
+        LOGE_QUICKJS("JS_ThrowReferenceError222:\n");
         return JS_ThrowReferenceErrorNotDefined(ctx, prop);
     } else {
         return JS_UNDEFINED;
@@ -7938,6 +7946,7 @@ retry:
 
     if (unlikely(flags & JS_PROP_NO_ADD)) {
         JS_FreeValue(ctx, val);
+        LOGE_QUICKJS("JS_ThrowReferenceError333:\n");
         JS_ThrowReferenceErrorNotDefined(ctx, prop);
         return -1;
     }
@@ -15462,6 +15471,7 @@ static JSValue JS_CallInternal(JSContext *ctx, JSValueConst func_obj,
 
                 /* sp[-2] is JS_TRUE or JS_FALSE */
                 if (unlikely(!JS_VALUE_GET_INT(sp[-2]))) {
+                    LOGE_QUICKJS("JS_ThrowReferenceError111:\n");
                     JS_ThrowReferenceErrorNotDefined(ctx, atom);
                     goto exception;
                 }
@@ -16318,6 +16328,7 @@ static JSValue JS_CallInternal(JSContext *ctx, JSValueConst func_obj,
                 if (unlikely(JS_IsUndefined(sp[-2]))) {
                     JSAtom atom = js_value_to_atom(ctx, sp[-1]);
                     if (atom != JS_ATOM_NULL) {
+                        LOGE_QUICKJS("JS_ThrowReferenceError555:\n");
                         JS_ThrowReferenceErrorNotDefined(ctx, atom);
                         JS_FreeAtom(ctx, atom);
                     }
@@ -16370,6 +16381,7 @@ static JSValue JS_CallInternal(JSContext *ctx, JSValueConst func_obj,
                     if (is_strict_mode(ctx)) {
                         JSAtom atom = js_value_to_atom(ctx, sp[-2]);
                         if (atom != JS_ATOM_NULL) {
+                            LOGE_QUICKJS("JS_ThrowReferenceError666:\n");
                             JS_ThrowReferenceErrorNotDefined(ctx, atom);
                             JS_FreeAtom(ctx, atom);
                         }
