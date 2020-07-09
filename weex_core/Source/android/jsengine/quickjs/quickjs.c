@@ -1449,7 +1449,7 @@ int JS_EnqueueJob(JSContext *ctx, JSJobFunc *job_func,
     JSRuntime *rt = ctx->rt;
     JSJobEntry *e;
     int i;
-
+LOGE_QUICKJS("fetch JS_EnqueueJob:\n");
     e = js_malloc(ctx, sizeof(*e) + argc * sizeof(JSValue));
     if (!e)
         return -1;
@@ -8646,6 +8646,7 @@ static int JS_DefineAutoInitProperty(JSContext *ctx, JSValueConst this_obj,
     p = JS_VALUE_GET_OBJ(this_obj);
 
     if (find_own_property(&pr, p, prop)) {
+        LOGE_QUICKJS("dyyLog JS_DefineAutoInitProperty %s",JS_AtomToCString(ctx,prop)); 
         /* property already exists */
         abort();
         return FALSE;
@@ -43654,7 +43655,7 @@ static JSValue js_promise_resolve_function_call(JSContext *ctx,
     JSValueConst resolution, args[3];
     JSValue then;
     BOOL is_reject;
-
+    LOGE_QUICKJS("fetch js_promise_resolving_function_call:");
     s = p->u.promise_function_data;
     if (!s || s->presolved->already_resolved)
         return JS_UNDEFINED;
@@ -43698,6 +43699,7 @@ static JSValue js_promise_resolve_function_call(JSContext *ctx,
 
 static void js_promise_finalizer(JSRuntime *rt, JSValue val)
 {
+    LOGE_QUICKJS("js_promise_finalizer:");
     JSPromiseData *s = JS_GetOpaque(val, JS_CLASS_PROMISE);
     struct list_head *el, *el1;
     int i;
@@ -43739,6 +43741,7 @@ static void js_promise_mark(JSRuntime *rt, JSValueConst val,
 static JSValue js_promise_constructor(JSContext *ctx, JSValueConst new_target,
                                       int argc, JSValueConst *argv)
 {
+    LOGE_QUICKJS("js_promise_constructor:");
     JSValueConst executor;
     JSValue obj;
     JSPromiseData *s;
@@ -43790,7 +43793,7 @@ static JSValue js_promise_executor(JSContext *ctx,
                                    int magic, JSValue *func_data)
 {
     int i;
-
+LOGE_QUICKJS("js_promise_executor:");
     for(i = 0; i < 2; i++) {
         if (!JS_IsUndefined(func_data[i]))
             return JS_ThrowTypeError(ctx, "resolving function already set");
@@ -43802,7 +43805,7 @@ static JSValue js_promise_executor(JSContext *ctx,
 static JSValue js_promise_executor_new(JSContext *ctx)
 {
     JSValueConst func_data[2];
-
+LOGE_QUICKJS("js_promise_executor_new:");
     func_data[0] = JS_UNDEFINED;
     func_data[1] = JS_UNDEFINED;
     return JS_NewCFunctionData(ctx, js_promise_executor, 2,
@@ -43813,6 +43816,7 @@ static JSValue js_new_promise_capability(JSContext *ctx,
                                          JSValue *resolving_funcs,
                                          JSValueConst ctor)
 {
+    LOGE_QUICKJS("js_new_promise_capability:");
     JSValue executor, result_promise;
     JSCFunctionDataRecord *s;
     int i;
@@ -43853,6 +43857,9 @@ JSValue JS_NewPromiseCapability(JSContext *ctx, JSValue *resolving_funcs)
 static JSValue js_promise_resolve(JSContext *ctx, JSValueConst this_val,
                                   int argc, JSValueConst *argv, int magic)
 {
+        
+        
+        LOGE_QUICKJS("js_promise_resolve:");
     JSValue result_promise, resolving_funcs[2], ret;
     BOOL is_reject = magic;
 
@@ -44198,6 +44205,7 @@ static __exception int perform_promise_then(JSContext *ctx,
                                             JSValueConst *resolve_reject,
                                             JSValueConst *cap_resolving_funcs)
 {
+        LOGE_QUICKJS("fetch perform_promise_then:\n");
     JSPromiseData *s = JS_GetOpaque(promise, JS_CLASS_PROMISE);
     JSPromiseReactionData *rd_array[2], *rd;
     int i, j;
@@ -44244,6 +44252,8 @@ static __exception int perform_promise_then(JSContext *ctx,
 static JSValue js_promise_then(JSContext *ctx, JSValueConst this_val,
                                int argc, JSValueConst *argv)
 {
+
+    LOGE_QUICKJS("fetch js_promise_then:\n");
     JSValue ctor, result_promise, resolving_funcs[2];
     JSPromiseData *s;
     int i, ret;
@@ -44616,6 +44626,7 @@ void JS_AddIntrinsicPromise(JSContext *ctx)
     JSValue obj1;
 
     if (!JS_IsRegisteredClass(rt, JS_CLASS_PROMISE)) {
+        LOGE_QUICKJS("dyyLog JS_AddIntrinsicPromise is running");
         init_class_range(rt, js_async_class_def, JS_CLASS_PROMISE,
                          countof(js_async_class_def));
         rt->class_array[JS_CLASS_PROMISE_RESOLVE_FUNCTION].call = js_promise_resolve_function_call;

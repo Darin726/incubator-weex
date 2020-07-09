@@ -45,6 +45,15 @@ static uint64_t microTime_new() {
   return (((uint64_t) tv.tv_sec) * MICROSEC + tv.tv_usec)/1000;
 }
 
+static void finish_quickjs_PendingJob(JSRuntime *rt, JSContext *ctx) {
+  LOGE("dyyLog fetch JS_IsJobPending ret is %d", JS_IsJobPending(rt));
+  int ret = 0;
+  JSContext *x;
+  do {
+    ret = JS_ExecutePendingJob(rt, &x);
+    LOGE("dyyLog fetch JS_ExecutePendingJob ret is %d", ret);
+  } while(ret > 0);
+}
 
 static JSValue js_print(JSContext *ctx, JSValueConst this_val, int argc,
                         JSValueConst *argv) {
@@ -229,7 +238,7 @@ int WeexRuntimeQuickJS::initFramework(
 // const JSValue &value= JS_EvalBinary(m_jsContextFramework, weex_main_jsfm, weex_main_jsfm_size, JS_EVAL_TYPE_GLOBAL);
 
   LOGE("calTime initFramework %lld", (microTime_new() - start));
-
+  finish_quickjs_PendingJob(m_jsRuntime, nullptr);
 
   if (JS_IsException(value)) {
     const JSValue &jsValue = JS_GetException(m_jsContextFramework);
@@ -365,6 +374,7 @@ int WeexRuntimeQuickJS::exeJS(const std::string &instanceId,
                          JS_NewAtom(thisContext, newFunc.c_str())),
           thisObject, size, a);
 
+  finish_quickjs_PendingJob(m_jsRuntime, thisContext);
   return 1;
 }
 
@@ -452,6 +462,7 @@ int WeexRuntimeQuickJS::createInstance(
     }
     LOGE("dyyLog  js_createInstance  pub str %s", instanceId.c_str());
     this->m_contextMap[instanceId.c_str()] = thisContext;
+    finish_quickjs_PendingJob(m_jsRuntime, thisContext);
   }
 
   if (!extendsApi.empty()) {

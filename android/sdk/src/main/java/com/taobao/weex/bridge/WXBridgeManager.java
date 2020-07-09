@@ -1463,23 +1463,23 @@ public class WXBridgeManager implements Callback, BactchExecutor {
     // add for sandbox, will delete on sandbox ok
 //    initFramework("");
 
-    File indexJS = new File("/data/local/tmp/weex/index.js");
-    if(indexJS.exists()) {
-      FileInputStream inputStream;
-      try {
-        inputStream = new FileInputStream(indexJS);
-        byte temp[] = new byte[1024];
-        StringBuilder newRenderJS = new StringBuilder("");
-        int len = 0;
-        while ((len = inputStream.read(temp)) > 0){
-          newRenderJS.append(new String(temp, 0, len));
-        }
-        inputStream.close();
-        template = new Script(newRenderJS.toString());
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
+//    File indexJS = new File("/data/local/tmp/weex/index.js");
+//    if(indexJS.exists()) {
+//      FileInputStream inputStream;
+//      try {
+//        inputStream = new FileInputStream(indexJS);
+//        byte temp[] = new byte[1024];
+//        StringBuilder newRenderJS = new StringBuilder("");
+//        int len = 0;
+//        while ((len = inputStream.read(temp)) > 0){
+//          newRenderJS.append(new String(temp, 0, len));
+//        }
+//        inputStream.close();
+//        template = new Script(newRenderJS.toString());
+//      } catch (Exception e) {
+//        e.printStackTrace();
+//      }
+//    }
 
 
 
