@@ -370,7 +370,7 @@ int WeexRuntime::exeCTimeCallback(const String &source) {
 
 int WeexRuntime::exeJS(const String &instanceId, const String &nameSpace, const String &func,
                        std::vector<VALUE_WITH_TYPE *> &params) {
-//    LOGE("dyyLog EXECJS func:%s and params size is %d", func.utf8().data(), params.size());
+//    LOGE("quickjsLog EXECJS func:%s and params size is %d", func.utf8().data(), params.size());
 
     String runFunc = func;
     JSGlobalObject *globalObject;
@@ -708,7 +708,7 @@ int WeexRuntime::createInstance(const String &instanceId, const String &func, co
             auto instanceGlobalObject = JSContextGetGlobalObject(instanceContextRef);
             auto pArray = JSObjectCopyPropertyNames(globalContextRef, ref);
             size_t keyCount = JSPropertyNameArrayGetCount(pArray);
-//            LOGE("dyyLog instance create and id is %s, and time is %lld, currentThread is %u", instanceId.utf8().data(), microTime(), pthread_self());
+//            LOGE("quickjsLog instance create and id is %s, and time is %lld, currentThread is %u", instanceId.utf8().data(), microTime(), pthread_self());
             for (size_t i = 0; i < keyCount; ++i) {
                 auto propertyName_ = JSPropertyNameArrayGetNameAtIndex(pArray, i);
                 auto propertyValue_ = JSObjectGetProperty(globalContextRef, ref, propertyName_, NULL);
@@ -830,7 +830,7 @@ WeexRuntime::_getArgListFromIPCArguments(MarkedArgumentBuffer *obj, ExecState *s
 void WeexRuntime::_getArgListFromJSParams(MarkedArgumentBuffer *obj, ExecState *state,
                                           std::vector<VALUE_WITH_TYPE *> &params) {
 
-    //dyyLog delete
+    //quickjsLog delete
 //    String msg = "exejs Args ";
 
     for (unsigned int i = 0; i < params.size(); i++) {
@@ -877,7 +877,7 @@ void WeexRuntime::_getArgListFromJSParams(MarkedArgumentBuffer *obj, ExecState *
         }
     }
 
-//    LOGE("dyyLog exejs Args is %s", msg.utf8().data());
+//    LOGE("quickjsLog exejs Args is %s", msg.utf8().data());
 }
 
 WeexObjectHolder *WeexRuntime::getLightAppObjectHolder(const String &instanceId) {

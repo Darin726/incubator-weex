@@ -34,7 +34,6 @@ static std::string toJSON(JSContext *ctx, JSValue value);
 static void printWson(std::string msg, wson_buffer *buffer) {
   wson_parser parser((char *) buffer->data);
   const std::string &string = parser.toStringUTF8();
-  LOGE("dyyLog printWson %s %s", msg.c_str(), string.c_str());
 }
 
 static uint64_t microTime_new() {
@@ -46,12 +45,10 @@ static uint64_t microTime_new() {
 }
 
 static void finish_quickjs_PendingJob(JSRuntime *rt, JSContext *ctx) {
-  LOGE("dyyLog fetch JS_IsJobPending ret is %d", JS_IsJobPending(rt));
   int ret = 0;
   JSContext *x;
   do {
     ret = JS_ExecutePendingJob(rt, &x);
-    LOGE("dyyLog fetch JS_ExecutePendingJob ret is %d", ret);
   } while(ret > 0);
 }
 
@@ -65,7 +62,6 @@ static JSValue js_print(JSContext *ctx, JSValueConst this_val, int argc,
     str = JS_ToCString(ctx, argv[i]);
     if (!str) return JS_EXCEPTION;
     // fputs(str, stdout);
-    LOGE("dyyLog js_CallConsoleLog %s", str);
     JS_FreeCString(ctx, str);
   }
   putchar('\n');
@@ -181,7 +177,6 @@ WeexRuntimeQuickJS::WeexRuntimeQuickJS(TimerQueue *timeQueue,
     : WeexRuntime(script_bridge) {
   m_jsRuntime = JS_NewRuntime();
   m_jsContextFramework = this->createContext();
-  LOGE("dyyLog");
 }
 
 bool WeexRuntimeQuickJS::hasInstanceId(std::string &id) { return false; }
@@ -191,7 +186,6 @@ void WeexRuntimeQuickJS::initFrameworkParams(
   static bool isSave = true;
   static std::vector<INIT_FRAMEWORK_PARAMS *> m_initFrameworkParams;
   bool useSavedParams = params.empty();
-  LOGE("dyyLog useSavedParams %d and size is %d and save is %d and params size is %d", useSavedParams, m_initFrameworkParams.size(), isSave, params.size());
   int size = useSavedParams ? m_initFrameworkParams.size() : params.size();
 
   const JSValue &jsValue = JS_NewObject(ctx);
@@ -245,10 +239,8 @@ int WeexRuntimeQuickJS::initFramework(
 
     const char *string = JS_ToCString(m_jsContextFramework, jsValue);
 
-    LOGE("dyyLog JS_IsException %s", string);
     return 0;
   } else {
-    LOGE("dyyLog finish");
     return 1;
   }
 }
@@ -288,10 +280,8 @@ int WeexRuntimeQuickJS::exeJsService(const std::string &source) {
 
     const char *string = JS_ToCString(m_jsContextFramework, jsValue);
 
-    LOGE("dyyLog exeJsService %s", string);
     return 0;
   } else {
-    LOGE("dyyLog exeJsService finish");
     return 1;
   }
 }
@@ -310,14 +300,11 @@ int WeexRuntimeQuickJS::exeJS(const std::string &instanceId,
   if (std::strcmp("callJS", func.c_str()) == 0) {
     thisContext = m_contextMap[instanceId.c_str()];
     if (thisContext == nullptr) {
-      LOGE("dyyLog  js_exeJS is running use global ctx1 %s",instanceId.c_str());
       thisContext = m_jsContextFramework;
     } else {
-      LOGE("dyyLog  js_exeJS is running use sandbox ctx2 %s",instanceId.c_str());
       newFunc = "__WEEX_CALL_JAVASCRIPT__";
     }
   } else {
-    LOGE("dyyLog  js_exeJS is running use global ctx %s",instanceId.c_str());
     thisContext = m_jsContextFramework;
   }
 
@@ -334,7 +321,6 @@ int WeexRuntimeQuickJS::exeJS(const std::string &instanceId,
       case ParamsType::STRING: {
         WeexString *ipcstr = paramsObject->value.string;
         auto string2String = weexString2String(ipcstr);
-        LOGE("dyyLog ss2 %s", string2String.c_str());
         a[i] = JS_NewString(thisContext, string2String.c_str());
 
       }
@@ -342,7 +328,6 @@ int WeexRuntimeQuickJS::exeJS(const std::string &instanceId,
       case ParamsType::JSONSTRING: {
         const WeexString *ipcstr = paramsObject->value.string;
         auto string2String = weexString2String(ipcstr);
-        LOGE("dyyLog ss1 %s", string2String.c_str());
         auto jsvalue = JS_ParseJSON(thisContext, string2String.c_str(),
                                     string2String.length(), "t");
 
@@ -353,7 +338,6 @@ int WeexRuntimeQuickJS::exeJS(const std::string &instanceId,
         const WeexByteArray *array = paramsObject->value.byteArray;
         wson_parser w(array->content, array->length);
         auto string2String = w.toStringUTF8();
-        LOGE("dyyLog ss %s", string2String.c_str());
         auto jsvalue = JS_ParseJSON(thisContext, string2String.c_str(),
                                     string2String.length(), "t");
         a[i] = jsvalue;
@@ -362,7 +346,6 @@ int WeexRuntimeQuickJS::exeJS(const std::string &instanceId,
         //                msg.append(JSONStringify(state, o, 0).utf8().data());
       }
         break; {
-            LOGE("dyyLog sss undefined");
             default:a[i] = JS_UNDEFINED;
             break;
         }
@@ -425,7 +408,6 @@ int WeexRuntimeQuickJS::createInstance(
     if (JS_IsException(ret)) {
       const JSValue &exception = JS_GetException(globalContext);
       const char *string = JS_ToCString(globalContext, exception);
-      LOGE("dyyLog js_createInstance Create Instance JS_IsException %s", string);
       return 0;
     }
 
@@ -444,39 +426,25 @@ int WeexRuntimeQuickJS::createInstance(
       auto newAtom = JS_NewAtom(thisContext, name);
       auto thisObject = JS_GetGlobalObject(thisContext);
       int aProperty = JS_SetProperty(thisContext, thisObject, newAtom, propertyValue);
-
-      LOGE("dyyLog  js_createInstance  propertyValue %s is Func %d is Object %d result is %d",
-          name, JS_IsFunction(globalContext, propertyValue), JS_IsObject(propertyValue), aProperty);
       if (strcmp(name, "Vue") == 0) {
-        LOGE("dyyLog  js_createInstance  set propertyValue Vue");
         JSValue val = JS_GetPrototype(thisContext, thisObject);
-        if(val == JS_NULL || val == JS_UNDEFINED) {
-          LOGE("dyyLog  js_createInstance  set propertyValue Vue undefined before");
-        }
         JS_SetPrototype(thisContext, propertyValue,
                         val);
-        if(val == JS_NULL || val == JS_UNDEFINED) {
-          LOGE("dyyLog  js_createInstance  set propertyValue Vue undefined after");
-        }
       }
     }
-    LOGE("dyyLog  js_createInstance  pub str %s", instanceId.c_str());
     this->m_contextMap[instanceId.c_str()] = thisContext;
     finish_quickjs_PendingJob(m_jsRuntime, thisContext);
   }
 
   if (!extendsApi.empty()) {
-    LOGE("dyyLog  js_createInstance  Create Instance extendsApi extendsApi");
     auto ret = JS_Eval(thisContext, extendsApi.c_str(), extendsApi.length(),
                        "extendsApi", JS_EVAL_TYPE_GLOBAL);
     if (JS_IsException(ret)) {
       const JSValue &exception = JS_GetException(thisContext);
       const char *string = JS_ToCString(thisContext, exception);
-      LOGE("dyyLog  js_createInstance  Create Instance extendsApi JS_IsException %s", string);
       return 0;
     }
   }
-  LOGE("dyyLog  js_createInstance  create Instance start %d %d", script.length(), script.size());
   auto createInstanceRet = JS_Eval(thisContext, script.c_str(), script.length(),
                                    "createInstance", JS_EVAL_TYPE_GLOBAL);
 
@@ -488,10 +456,8 @@ int WeexRuntimeQuickJS::createInstance(
     const char *error_name = JS_ToCString(thisContext, name);
     stack = JS_GetPropertyStr(thisContext, exception, "stack");
     const char *stack_str = JS_ToCString(thisContext, stack);
-    LOGE("dyyLog  js_createInstance Create Instance createInstanceRet JS_IsException %s %s %s",error_name, string, stack_str);
     return 0;
   }
-  LOGE("dyyLog  js_createInstance create Instance Finish");
   return 1;
 }
 
@@ -598,7 +564,6 @@ void WeexRuntimeQuickJS::removeTimerFunctionForRunTimeApi(
 
 static JSValue js_GCAndSweep(JSContext *ctx, JSValueConst this_val, int argc,
                              JSValueConst *argv) {
-  LOGE("dyyLog js_GCAndSweep");
   return JS_UNDEFINED;
 }
 
@@ -681,7 +646,6 @@ static void putValuesToWson(JSContext *ctx, JSValue value,
       break;
     }
     default: {
-      LOGE("dyyLog default");
       break;
     }
   }
@@ -693,7 +657,6 @@ static wson_buffer *toWsonBuffer(JSContext *ctx, JSValue value) {
   putValuesToWson(ctx, value, buffer);
   wson_parser parser((char *) buffer->data);
   const std::string &string = parser.toStringUTF8();
-  LOGE("dyyLog toWsonBuffer %s", string.empty() ? "put empty" : string.c_str());
   return buffer;
 }
 
@@ -701,13 +664,11 @@ static std::string toJSON(JSContext *ctx, JSValue value) {
   wson_buffer *buffer = wson_buffer_new();
   putValuesToWson(ctx, value, buffer);
   wson_parser parser((char *) buffer->data);
-  LOGE("dyyLog toJSON %s", parser.toStringUTF8().c_str());
   return parser.toStringUTF8();
 }
 
 static JSValue js_CallNative(JSContext *ctx, JSValueConst this_val, int argc,
                              JSValueConst *argv) {
-  LOGE("dyyLog js_CallNative");
   const char *id = JS_ToCString(ctx, argv[0]);
   const char *task = toJSON(ctx, argv[1]).c_str();
   const char *callback = JS_ToCString(ctx, argv[2]);
@@ -726,7 +687,6 @@ static JSValue js_CallNativeModule(JSContext *ctx, JSValueConst this_val,
   wson_buffer *options = toWsonBuffer(ctx, argv[4]);
 
   printWson("callNativeModule arguments", arguments);
-  LOGE("dyyLog js_CallNativeModule %s %s", module, method);
   auto result =
       WeexEnv::getEnv()->scriptBridge()->core_side()->CallNativeModule(
           id, module, method, (char *) (arguments->data), arguments->length,
@@ -756,7 +716,6 @@ static JSValue js_CallNativeModule(JSContext *ctx, JSValueConst this_val,
       wson_parser w(result->value.byteArray->content,
                     result->value.byteArray->length);
       auto string2String = w.toStringUTF8();
-      LOGE("dyyLog ss %s", string2String.c_str());
       auto jsvalue =
           JS_ParseJSON(ctx, string2String.c_str(), string2String.length(), "t");
       free(result->value.byteArray);
@@ -766,13 +725,11 @@ static JSValue js_CallNativeModule(JSContext *ctx, JSValueConst this_val,
     default: { ret = JS_UNDEFINED; }
       break;
   }
-  LOGE("dyyLog js_CallNativeModule %s : %s : %s", id, module, method);
   return ret;
 }
 
 static JSValue js_CallNativeComponent(JSContext *ctx, JSValueConst this_val,
                                       int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_CallNativeComponent");
   wson_buffer *arguments = toWsonBuffer(ctx, argv[3]);
   wson_buffer *options = toWsonBuffer(ctx, argv[4]);
   WeexEnv::getEnv()->scriptBridge()->core_side()->CallNativeComponent(
@@ -789,7 +746,6 @@ static JSValue js_CallAddElement(JSContext *ctx, JSValueConst this_val,
   wson_buffer *pBuffer = toWsonBuffer(ctx, argv[2]);
   const char *id = JS_ToCString(ctx, argv[0]);
   const char *ref = JS_ToCString(ctx, argv[1]);
-  LOGE("dyyLog js_CallAddElement %s %s", id, ref);
   WeexEnv::getEnv()->scriptBridge()->core_side()->AddElement(
       id, ref,
       (char *) pBuffer->data, pBuffer->length, JS_ToCString(ctx, argv[3]));
@@ -799,15 +755,13 @@ static JSValue js_CallAddElement(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_SetTimeoutNative(JSContext *ctx, JSValueConst this_val,
                                    int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_SetTimeoutNative");
   return JS_UNDEFINED;
 }
 
 static JSValue js_NativeLog(JSContext *ctx, JSValueConst this_val, int argc,
                             JSValueConst *argv) {
-  LOGE("dyyLog jsBindingMethod js_NativeLog");
 
-  std::string result = "dyyLog";
+  std::string result = "quickjsLog";
 
   for (int i = 0; i < argc; ++i) {
     const char *string = JS_ToCString(ctx, argv[i]);
@@ -821,31 +775,29 @@ static JSValue js_NativeLog(JSContext *ctx, JSValueConst this_val, int argc,
 
 static JSValue js_NotifyTrimMemory(JSContext *ctx, JSValueConst this_val,
                                    int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_NotifyTrimMemory");
   return JS_UNDEFINED;
 }
 
 static JSValue js_MarkupState(JSContext *ctx, JSValueConst this_val, int argc,
                               JSValueConst *argv) {
-  return LOGE("dyyLog js_MarkupState");
   JS_UNDEFINED;
 }
 
 static JSValue js_Atob(JSContext *ctx, JSValueConst this_val, int argc,
                        JSValueConst *argv) {
-  return LOGE("dyyLog js_Atob");
+  return LOGE("quickjsLog js_Atob");
   JS_UNDEFINED;
 }
 
 static JSValue js_Btoa(JSContext *ctx, JSValueConst this_val, int argc,
                        JSValueConst *argv) {
-  return LOGE("dyyLog js_Btoa");
+  return LOGE("quickjsLog js_Btoa");
   JS_UNDEFINED;
 }
 
 static JSValue js_CallCreateBody(JSContext *ctx, JSValueConst this_val,
                                  int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_CallCreateBody %d", argc);
+  LOGE("quickjsLog js_CallCreateBody %d", argc);
   wson_buffer *pBuffer = toWsonBuffer(ctx, argv[1]);
   WeexEnv::getEnv()->scriptBridge()->core_side()->CreateBody(
       JS_ToCString(ctx, argv[0]), (char *) pBuffer->data, pBuffer->length);
@@ -855,7 +807,7 @@ static JSValue js_CallCreateBody(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_CallUpdateFinish(JSContext *ctx, JSValueConst this_val,
                                    int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_CallUpdateFinish");
+  LOGE("quickjsLog js_CallUpdateFinish");
   wson_buffer *taskChar = toWsonBuffer(ctx, argv[1]);
   wson_buffer *callBackChar = toWsonBuffer(ctx, argv[2]);
   int a = WeexEnv::getEnv()->scriptBridge()->core_side()->UpdateFinish(
@@ -866,7 +818,7 @@ static JSValue js_CallUpdateFinish(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_CallCreateFinish(JSContext *ctx, JSValueConst this_val,
                                    int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_CallCreateFinish");
+  LOGE("quickjsLog js_CallCreateFinish");
   WeexEnv::getEnv()->scriptBridge()->core_side()->CreateFinish(
       JS_ToCString(ctx, argv[0]));
   return JS_NewInt32(ctx, 0);
@@ -874,7 +826,7 @@ static JSValue js_CallCreateFinish(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_CallRefreshFinish(JSContext *ctx, JSValueConst this_val,
                                     int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_CallRefreshFinish");
+  LOGE("quickjsLog js_CallRefreshFinish");
 
   int i = WeexEnv::getEnv()->scriptBridge()->core_side()->RefreshFinish(
       JS_ToCString(ctx, argv[0]), JS_ToCString(ctx, argv[1]),
@@ -885,7 +837,7 @@ static JSValue js_CallRefreshFinish(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_CallUpdateAttrs(JSContext *ctx, JSValueConst this_val,
                                   int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_CallUpdateAttrs");
+  LOGE("quickjsLog js_CallUpdateAttrs");
 
   wson_buffer *pBuffer = toWsonBuffer(ctx, argv[2]);
 
@@ -897,7 +849,7 @@ static JSValue js_CallUpdateAttrs(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_CallUpdateStyle(JSContext *ctx, JSValueConst this_val,
                                   int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_CallUpdateStyle");
+  LOGE("quickjsLog js_CallUpdateStyle");
   wson_buffer *pBuffer = toWsonBuffer(ctx, argv[2]);
   WeexEnv::getEnv()->scriptBridge()->core_side()->UpdateStyle(
       JS_ToCString(ctx, argv[0]), JS_ToCString(ctx, argv[1]),
@@ -907,7 +859,7 @@ static JSValue js_CallUpdateStyle(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_CallRemoveElement(JSContext *ctx, JSValueConst this_val,
                                     int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_CallRemoveElement");
+  LOGE("quickjsLog js_CallRemoveElement");
 
   WeexEnv::getEnv()->scriptBridge()->core_side()->RemoveElement(
       JS_ToCString(ctx, argv[0]), JS_ToCString(ctx, argv[1]));
@@ -916,7 +868,7 @@ static JSValue js_CallRemoveElement(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_CallMoveElement(JSContext *ctx, JSValueConst this_val,
                                   int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_CallMoveElement");
+  LOGE("quickjsLog js_CallMoveElement");
   WeexEnv::getEnv()->scriptBridge()->core_side()->MoveElement(
       JS_ToCString(ctx, argv[0]), JS_ToCString(ctx, argv[1]),
       JS_ToCString(ctx, argv[2]), atoi(JS_ToCString(ctx, argv[3])));
@@ -925,7 +877,7 @@ static JSValue js_CallMoveElement(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_CallAddEvent(JSContext *ctx, JSValueConst this_val, int argc,
                                JSValueConst *argv) {
-  LOGE("dyyLog js_CallAddEvent");
+  LOGE("quickjsLog js_CallAddEvent");
   WeexEnv::getEnv()->scriptBridge()->core_side()->AddEvent(
       JS_ToCString(ctx, argv[0]), JS_ToCString(ctx, argv[1]),
       JS_ToCString(ctx, argv[2]));
@@ -934,7 +886,7 @@ static JSValue js_CallAddEvent(JSContext *ctx, JSValueConst this_val, int argc,
 
 static JSValue js_CallRemoveEvent(JSContext *ctx, JSValueConst this_val,
                                   int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_CallRemoveEvent");
+  LOGE("quickjsLog js_CallRemoveEvent");
   WeexEnv::getEnv()->scriptBridge()->core_side()->RemoveEvent(
       JS_ToCString(ctx, argv[0]), JS_ToCString(ctx, argv[1]),
       JS_ToCString(ctx, argv[2]));
@@ -943,13 +895,13 @@ static JSValue js_CallRemoveEvent(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_GCanvasLinkNative(JSContext *ctx, JSValueConst this_val,
                                     int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_GCanvasLinkNative");
+  LOGE("quickjsLog js_GCanvasLinkNative");
   return JS_UNDEFINED;
 }
 
 static JSValue js_SetIntervalWeex(JSContext *ctx, JSValueConst this_val,
                                   int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_SetIntervalWeex");
+  LOGE("quickjsLog js_SetIntervalWeex");
 
   int i = WeexEnv::getEnv()->scriptBridge()->core_side()->SetInterval(
       JS_ToCString(ctx, argv[0]), JS_ToCString(ctx, argv[1]),
@@ -959,67 +911,67 @@ static JSValue js_SetIntervalWeex(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_ClearIntervalWeex(JSContext *ctx, JSValueConst this_val,
                                     int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_ClearIntervalWeex");
+  LOGE("quickjsLog js_ClearIntervalWeex");
   return JS_UNDEFINED;
 }
 
 static JSValue js_T3DLinkNative(JSContext *ctx, JSValueConst this_val, int argc,
                                 JSValueConst *argv) {
-  LOGE("dyyLog js_T3DLinkNative");
+  LOGE("quickjsLog js_T3DLinkNative");
   return JS_UNDEFINED;
 }
 
 static JSValue js_NativeLogContext(JSContext *ctx, JSValueConst this_val,
                                    int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_NativeLogContext");
+  LOGE("quickjsLog js_NativeLogContext");
   return JS_UNDEFINED;
 }
 
 static JSValue js_DisPatchMeaage(JSContext *ctx, JSValueConst this_val,
                                  int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_DisPatchMeaage");
+  LOGE("quickjsLog js_DisPatchMeaage");
   return JS_UNDEFINED;
 }
 
 static JSValue js_DispatchMessageSync(JSContext *ctx, JSValueConst this_val,
                                       int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_DispatchMessageSync");
+  LOGE("quickjsLog js_DispatchMessageSync");
   return JS_UNDEFINED;
 }
 
 static JSValue js_PostMessage(JSContext *ctx, JSValueConst this_val, int argc,
                               JSValueConst *argv) {
-  LOGE("dyyLog js_PostMessage");
+  LOGE("quickjsLog js_PostMessage");
   return JS_UNDEFINED;
 }
 
 static JSValue js_NativeSetTimeout(JSContext *ctx, JSValueConst this_val,
                                    int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_NativeSetTimeout");
+  LOGE("quickjsLog js_NativeSetTimeout");
   return JS_UNDEFINED;
 }
 
 static JSValue js_NativeSetInterval(JSContext *ctx, JSValueConst this_val,
                                     int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_NativeSetInterval");
+  LOGE("quickjsLog js_NativeSetInterval");
   return JS_UNDEFINED;
 }
 
 static JSValue js_NativeClearTimeout(JSContext *ctx, JSValueConst this_val,
                                      int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_NativeClearTimeout");
+  LOGE("quickjsLog js_NativeClearTimeout");
   return JS_UNDEFINED;
 }
 
 static JSValue js_NativeClearInterval(JSContext *ctx, JSValueConst this_val,
                                       int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_NativeClearInterval");
+  LOGE("quickjsLog js_NativeClearInterval");
   return JS_UNDEFINED;
 }
 
 // For data render
 static JSValue js_UpdateComponentData(JSContext *ctx, JSValueConst this_val,
                                       int argc, JSValueConst *argv) {
-  LOGE("dyyLog js_UpdateComponentData");
+  LOGE("quickjsLog js_UpdateComponentData");
   return JS_UNDEFINED;
 }

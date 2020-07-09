@@ -1778,7 +1778,7 @@ static inline BOOL js_check_stack_overflow(JSContext *ctx, size_t alloca_size)
 {
     size_t size;
     size = ctx->stack_top - js_get_stack_pointer();
-    // LOGE_QUICKJS("dyyLog js_check_stack_overflow %d %d %d %d %d",
+    // LOGE_QUICKJS("quickjsLog js_check_stack_overflow %d %d %d %d %d",
     // ctx->stack_top, alloca_size, (size + alloca_size), ctx->stack_size, ((size + alloca_size) > ctx->stack_size));  
     return false;
 }
@@ -6482,7 +6482,7 @@ JSValue JS_GetPropertyInternal(JSContext *ctx, JSValueConst obj,
         switch(tag) {
         case JS_TAG_NULL:
         case JS_TAG_UNDEFINED:
-            LOGE_QUICKJS("dyyLog Here %s",JS_AtomToCString(ctx,prop));
+            LOGE_QUICKJS("quickjsLog Here %s",JS_AtomToCString(ctx,prop));
             return JS_ThrowTypeError(ctx, "value has no property");
         case JS_TAG_EXCEPTION:
             return JS_EXCEPTION;
@@ -6601,7 +6601,7 @@ JSValue JS_GetPropertyInternal(JSContext *ctx, JSValueConst obj,
             break;
     }
     if (unlikely(throw_ref_error)) {
-        LOGE_QUICKJS("dyyLog Here %s",JS_AtomToCString(ctx,prop));  
+        LOGE_QUICKJS("quickjsLog Here %s",JS_AtomToCString(ctx,prop));
         LOGE_QUICKJS("JS_ThrowReferenceError222:\n");
         return JS_ThrowReferenceErrorNotDefined(ctx, prop);
     } else {
@@ -8646,7 +8646,7 @@ static int JS_DefineAutoInitProperty(JSContext *ctx, JSValueConst this_obj,
     p = JS_VALUE_GET_OBJ(this_obj);
 
     if (find_own_property(&pr, p, prop)) {
-        LOGE_QUICKJS("dyyLog JS_DefineAutoInitProperty %s",JS_AtomToCString(ctx,prop)); 
+        LOGE_QUICKJS("quickjsLog JS_DefineAutoInitProperty %s",JS_AtomToCString(ctx,prop));
         /* property already exists */
         abort();
         return FALSE;
@@ -44626,7 +44626,7 @@ void JS_AddIntrinsicPromise(JSContext *ctx)
     JSValue obj1;
 
     if (!JS_IsRegisteredClass(rt, JS_CLASS_PROMISE)) {
-        LOGE_QUICKJS("dyyLog JS_AddIntrinsicPromise is running");
+        LOGE_QUICKJS("quickjsLog JS_AddIntrinsicPromise is running");
         init_class_range(rt, js_async_class_def, JS_CLASS_PROMISE,
                          countof(js_async_class_def));
         rt->class_array[JS_CLASS_PROMISE_RESOLVE_FUNCTION].call = js_promise_resolve_function_call;

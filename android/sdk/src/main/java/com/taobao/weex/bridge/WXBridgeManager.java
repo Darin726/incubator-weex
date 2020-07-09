@@ -2652,7 +2652,7 @@ public class WXBridgeManager implements Callback, BactchExecutor {
               .append(", styles:").append(styles)
               .append(", attributes:").append(attributes)
               .append(", events:").append(events);
-      WXLogUtils.d("dyyLog" + mLodBuilder.substring(0));
+      WXLogUtils.d("quickjsLog" + mLodBuilder.substring(0));
       mLodBuilder.setLength(0);
     }
 
